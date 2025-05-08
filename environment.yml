@@ -14,3 +14,4 @@ dependencies:
   - openpyxl
   - pytest
   - pytest-cov
+  - poliastro
