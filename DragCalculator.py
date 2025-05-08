@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 # Density at 175 km altitude https://ui.adsabs.harvard.edu/abs/2001JGR...10623349T/abstract
 rho = 1.8e-11 # kg/m^3 
 
-GM = 0.042828e6 # km^3/s^2
+GM = 0.042828e6 # km^3/s^2 https://nssdc.gsfc.nasa.gov/planetary/factsheet/marsfact.html
 R = 3.3895e6 # m
 h = 250e3 # m
 r = R + h # m
