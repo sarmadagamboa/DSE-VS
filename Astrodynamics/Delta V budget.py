@@ -23,7 +23,7 @@ leo_radius = r_earth + leo_alt  # km
 mars_orbit_alt = 280  # km
 mars_orbit_radius = r_mars + mars_orbit_alt  # km
 
-mars_sma = (d_MS + d_ES)/2 # km (semi-major axis of Mars orbit)
+mars_sma = (d_MS + d_ES) # km (major axis of Mars orbit)
 #Phase 0: Launch - LEO
 delta_v_launch = 0
 
@@ -33,8 +33,8 @@ v_mars_orbit = np.sqrt(mu_sun / d_MS)
 
 # Earth LEO Orbit - MTI
 transfer_a = ((leo_radius + mars_sma + mars_orbit_radius) / 2)  # km
-e = 1-(leo_radius/transfer_a)
-#print(transfer_a)
+e = 1-((leo_radius+d_ES)/transfer_a)
+print(transfer_a)
 v_leo = np.sqrt(mu_earth / leo_radius)
 v_hel_LEO = np.sqrt(mu_sun * (2 /d_ES - 1 / transfer_a))
 v_inf_leo = v_hel_LEO - v_earth_orbit
