@@ -49,7 +49,7 @@ v_inf_mars = v_hel_mars - v_mars_orbit
 
 
 # Phase 4: Circularization at altitude
-v_apo_mars = np.sqrt((2*mu_mars/mars_orbit_radius) + v_inf_leo**2)
+v_apo_mars = np.sqrt((2*mu_mars/mars_orbit_radius) + v_inf_mars**2)
 delta_v_inclination = np.sqrt(2*v_mars**(2) *(1-np.cos(93)))
 delta_v_2= np.abs(v_mars - v_apo_mars)
 
