@@ -7,7 +7,6 @@ G = E / (2 * (1 + nu))  # shear modulus
 rho = 7850  # density in kg/m^3	
 
 
-
 # geometry
 L = 4.6  # length in m
 r = 1.5  # radius in m
