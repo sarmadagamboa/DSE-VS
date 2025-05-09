@@ -47,8 +47,6 @@ conda develop .
 
 ```bash
 
-conda activate SVV-FD
-
 conda install poliastro 
   
   
