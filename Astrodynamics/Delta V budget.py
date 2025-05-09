@@ -20,12 +20,12 @@ delta_v_per_year = 60 #m/s
 leo_alt = 300  # km
 leo_radius = r_earth + leo_alt  # km
 
-mars_orbit_alt = 280  # km
+mars_orbit_alt = 500  # km
 mars_orbit_radius = r_mars + mars_orbit_alt  # km
 
 mars_sma = (d_MS + d_ES) # km (major axis of Mars orbit)
 #Phase 0: Launch - LEO
-delta_v_launch = 0
+delta_v_launch = np.sqrt(mu_earth/leo_radius)
 
 #Planetary velocities
 v_earth_orbit = np.sqrt(mu_sun/d_ES)
@@ -49,7 +49,7 @@ v_inf_mars = v_hel_mars - v_mars_orbit
 
 
 # Phase 4: Circularization at altitude
-v_apo_mars = np.sqrt((2*mu_mars/mars_orbit_radius) + v_inf_leo**2)
+v_apo_mars = np.sqrt((2*mu_mars/mars_orbit_radius) + v_inf_mars**2)
 delta_v_2= np.abs(v_mars - v_apo_mars)
 
 # Phase 5: Station Keeping (15 m/s per year for 4.5 years)
