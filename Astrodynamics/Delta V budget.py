@@ -20,7 +20,7 @@ delta_v_per_year = 60 #m/s
 leo_alt = 300  # km
 leo_radius = r_earth + leo_alt  # km
 
-mars_orbit_alt = 300  # km
+mars_orbit_alt = 280  # km
 mars_orbit_radius = r_mars + mars_orbit_alt  # km
 
 mars_sma = (d_MS + d_ES)/2 # km (semi-major axis of Mars orbit)
@@ -34,15 +34,8 @@ v_mars_orbit = np.sqrt(mu_sun / d_MS)
 # Earth LEO Orbit - MTI
 transfer_a = ((leo_radius + mars_sma + mars_orbit_radius) / 2)  # km
 e = 1-(leo_radius/transfer_a)
-print(transfer_a)
+#print(transfer_a)
 v_leo = np.sqrt(mu_earth / leo_radius)
-v_hel_LEO = np.sqrt(mu_sun * (2 /d_ES - 1 / transfer_a))
-v_inf_leo = v_hel_LEO - v_earth_orbit
-v_per_LEO = np.sqrt((2*mu_earth/leo_radius) + v_inf_leo**2)
-delta_v_1 =  np.abs(v_per_LEO - v_leo)
-
-
-# Hyperbolic velocities to abandon sphere of influence
 v_hel_LEO = np.sqrt(mu_sun * (2 /d_ES - 1 / transfer_a))
 v_inf_leo = v_hel_LEO - v_earth_orbit
 v_per_LEO = np.sqrt((2*mu_earth/leo_radius) + v_inf_leo**2)
