@@ -49,7 +49,8 @@ v_inf_mars = v_hel_mars - v_mars_orbit
 
 
 # Phase 4: Circularization at altitude
-v_apo_mars = np.sqrt((2*mu_mars/mars_orbit_radius) + v_inf_mars**2)
+v_apo_mars = np.sqrt((2*mu_mars/mars_orbit_radius) + v_inf_leo**2)
+delta_v_inclination = np.sqrt(2*v_mars**(2) *(1-np.cos(93)))
 delta_v_2= np.abs(v_mars - v_apo_mars)
 
 # Phase 5: Station Keeping (15 m/s per year for 4.5 years)
@@ -63,6 +64,7 @@ delta_v_deorbit = 60/1000  # km/s
 total_delta_v = (
     delta_v_launch+
     delta_v_1+
+    delta_v_inclination+
     delta_v_2+
     delta_v_station_keeping+
     delta_v_deorbit
@@ -73,6 +75,7 @@ print(f'eccentricity of transfer orbit: {e}')
 print("=== Mars Mission ΔV Budget ===")
 print(f'ΔV: launch to LEO = {delta_v_launch:.3f} km/s')
 print(f'ΔV: from LEO - MARS = {delta_v_1:.3f} km/s')
+print(f'ΔV: orbit inclination = {delta_v_inclination:.3f} km/s')
 print(f'ΔV: MARS circularize= {delta_v_2:.3f} km/s')
 print(f"ΔV: Station Keeping      = {delta_v_station_keeping:.3f} km/s")
 print(f"ΔV: End-of-Life Deorbit             = {delta_v_deorbit:.3f} km/s")
