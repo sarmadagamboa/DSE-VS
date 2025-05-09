@@ -64,3 +64,4 @@ conda env update --file environment.yml
 ```
 
 <!-- A solver in the context of package management (like Conda) is a tool or algorithm responsible for resolving dependencies between software packages. Its primary job is to determine which versions of packages and their dependencies can coexist in an environment without conflicts. -->
+
