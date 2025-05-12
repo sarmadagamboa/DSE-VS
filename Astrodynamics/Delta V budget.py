@@ -20,7 +20,7 @@ delta_v_per_year = 60 #m/s
 leo_alt = 300  # km
 leo_radius = r_earth + leo_alt  # km
 
-mars_orbit_alt = 500  # km
+mars_orbit_alt = 280  # km
 mars_orbit_radius = r_mars + mars_orbit_alt  # km
 
 mars_sma = (d_MS + d_ES) # km (major axis of Mars orbit)
