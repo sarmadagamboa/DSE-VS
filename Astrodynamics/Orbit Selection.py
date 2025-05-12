@@ -1,6 +1,3 @@
-#First the trade off table for the type of orbit used
-
-
 import pandas as pd
 
 # criteria
