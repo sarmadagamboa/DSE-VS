@@ -374,4 +374,4 @@ def simulate_and_plot2():
 if __name__ == "__main__":
     main(use_aerobraking=True, inclination_midcourse=False, leo_alt=200, mars_orbit_alt=400)
     simulate_and_plot()
-    #simulate_and_plot2()
+    simulate_and_plot2()
