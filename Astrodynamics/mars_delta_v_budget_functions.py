@@ -20,8 +20,8 @@ mars_orbit_alt = 300
 delta_v_per_year = 60  # m/s
 leo_radius = r_earth + leo_alt
 mars_orbit_radius = r_mars + mars_orbit_alt
-
-
+v_leo = np.sqrt(mu_earth / leo_radius)
+v_mars_circ = np.sqrt(mu_mars / mars_orbit_radius)
 
 
 def compute_launch_to_leo():
@@ -29,7 +29,6 @@ def compute_launch_to_leo():
 
 def compute_transfer_injection():
     transfer_a = (leo_radius + (d_MS + d_ES) + mars_orbit_radius) / 2
-    v_leo = np.sqrt(mu_earth / leo_radius)
     v_earth_orbit = np.sqrt(mu_sun / d_ES)
     v_hel_LEO = np.sqrt(mu_sun * (2 / d_ES - 1 / transfer_a))
     v_inf_leo = v_hel_LEO - v_earth_orbit
@@ -40,17 +39,13 @@ def compute_transfer_injection():
 
 
 def compute_mars_inclination_change(v_orbit):
-    e_mars = 0.8537
-    a_mars = mars_orbit_radius / (1 - e_mars)
-    r_apo_mars = 2 * a_mars - mars_orbit_radius
-    v_mars_apo = np.sqrt(mu_mars / r_apo_mars)
+
     delta_v_incl = np.sqrt(2 * v_orbit**2 * (1 - np.cos(np.radians(93))))
     return delta_v_incl, r_apo_mars
 
 def compute_mars_circularization(v_inf_mars):
     v_apo_mars = np.sqrt((2 * mu_mars / mars_orbit_radius) + v_inf_mars**2)
-    v_circ = np.sqrt(mu_mars / mars_orbit_radius)
-    return np.abs(v_circ - v_apo_mars)
+    return np.abs(v_mars_circ - v_apo_mars)
 
 def compute_station_keeping(years=4.5):
     return delta_v_per_year * years / 1000  # km/s
@@ -71,17 +66,19 @@ delta_v_1, transfer_a, e, v_inf_leo = compute_transfer_injection()
 v_hel_mars = np.sqrt(mu_sun * (2 / d_MS - 1 / transfer_a))
 v_mars_orbit = np.sqrt(mu_sun / d_MS)
 v_inf_mars = v_hel_mars - v_mars_orbit
-delta_v_inclination = compute_mars_inclination_change(v_mars_apo)[0]
+
 # r_apo_mars = compute_mars_inclination_change(v_inf_mars)
 
 # delta_v_2 = 0  # Aerobraking assumed
-use_aerobraking = False  
+use_aerobraking = True  
 
 if use_aerobraking:
     delta_v_2 = 0
+    delta_v_inclination = compute_mars_inclination_change(v_mars_apo)[0]
     print("Aerobraking enabled — circularization ΔV saved.")
 else:
     delta_v_2 = compute_mars_circularization(v_inf_mars)
+    delta_v_inclination = compute_mars_inclination_change(v_mars_circ)[0]
     print("Aerobraking disabled — full circularization burn required.")
 
 
