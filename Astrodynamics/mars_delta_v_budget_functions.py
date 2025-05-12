@@ -144,11 +144,11 @@ def main(use_aerobraking=True, inclination_midcourse=False, leo_alt=200, mars_or
         delta_v_inclination = compute_mars_inclination_change(v_mars_circ)
         print("Aerobraking disabled — full circularization burn required.")
     elif not inclination_midcourse and use_aerobraking:
-        delta_v_2 = np.abs(v_mars_per - v_mars_circ) + 20
+        delta_v_2 = np.abs(v_mars_per - v_mars_circ) + 20/1000
         delta_v_inclination = compute_mars_inclination_change(v_mars_apo)
         print("Aerobraking enabled — circularization ΔV saved.")
     elif inclination_midcourse and use_aerobraking:
-        delta_v_2 = np.abs(v_mars_per - v_mars_circ) + 20
+        delta_v_2 = np.abs(v_mars_per - v_mars_circ) + 20/1000
         delta_v_inclination = 20 / 1000  # 20 m/s
         print("Inclination changed midcourse.")
     else:
@@ -371,6 +371,6 @@ def simulate_and_plot2():
 
 
 if __name__ == "__main__":
-    main(use_aerobraking=True, inclination_midcourse=False, leo_alt=200, mars_orbit_alt=300)
+    main(use_aerobraking=True, inclination_midcourse=True, leo_alt=200, mars_orbit_alt=300)
     #simulate_and_plot()
     #simulate_and_plot2()
