@@ -1,5 +1,5 @@
 import numpy as np
-
+import math 
 # Operating Ranges:
 
 # Payload:
@@ -49,6 +49,24 @@ EPSILON_COLD = 0.79     # Emissivity (127 μm Teflon)
 Q_DISS_COLD = 950.0     # Internal dissipation [W]
 Q_LOSS_COLD = 0.0       # Structural heat exchange [W]
 
+def cylinder_area(r, l):
+    """
+    Total surface area of a cylinder with radius r and length l.
+    """
+    return 2 * math.pi * r * (l + r)
+
+def compute_TCS_mass(A_rad, A_tot):
+    """
+    Returns the mass of the TCS [kg] based on its area [m²]:
+    m = A_rad * ρ * t
+    where ρ is the density of the radiator material and t is its thickness.
+    """
+    # Material properties (example values)
+    rho_teflon = 2700.0  # Density of aluminum [kg/m³]
+    t = 127e-6     # Thickness of the radiator [m]
+    A_MLI = A_tot - A_rad
+    rho_MLI = 0.73 # Density of MLI [kg/m²] for 15 layers
+    return A_rad * rho_teflon * t + A_MLI * rho_MLI
 
 def compute_fluxes(view_factor=0.9):
     """
@@ -98,11 +116,14 @@ def main():
     q_sol, q_alb, q_ir = compute_fluxes()
     A_rad = compute_radiator_area(q_sol, q_alb, q_ir)
     T_cold = compute_cold_temperature(A_rad, q_sol, q_alb, q_ir)
+    A_tot = cylinder_area(1.5, 4.6)  # Cylinder dimensions [m]
+    TCS_mass = compute_TCS_mass(A_rad, A_tot)
 
     print(f"Dimensionless altitude ν = a/Rₘₐᵣₛ: {NU:.4f}")
     print(f"Radiator area       : {A_rad:.2f} m²")
     print(f"Cold-case temp      : {T_cold:.2f} °C")
     print(f"Fluxes [W/m²]       : q_sol={q_sol:.2f}, q_alb={q_alb:.2f}, q_ir={q_ir:.2f}")
+    print(f"Total TCS mass      : {TCS_mass:.2f} kg")
 
 
 if __name__ == "__main__":
