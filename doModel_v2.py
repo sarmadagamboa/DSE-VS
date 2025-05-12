@@ -29,7 +29,7 @@ def plot_sst():
             current_r = R + height
             current_n = n[i]
 
-            gamma = np.arctan(d_fixed/current_r)
+            gamma = 2* np.arctan((d_fixed/2)/current_r)
 
             #Fl = l_range / (np.sqrt(2 + 4 * l_range + 4 * l_range**2)) * (1 / np.sqrt(l_range)) #smoothened 
 
