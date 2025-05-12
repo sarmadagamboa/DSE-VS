@@ -3,6 +3,8 @@ from astropy import units as u
 from astropy.constants import G, M_earth, R_earth
 import numpy as np
 
+from astropy import units as u
+
 
 # Add these lines manually to define Mars constants
 M_mars = 6.4171e23 * u.kg     # Mars mass
@@ -20,7 +22,7 @@ delta_v_per_year = 60 #m/s
 leo_alt = 300  # km
 leo_radius = r_earth + leo_alt  # km
 
-mars_orbit_alt = 500  # km
+mars_orbit_alt = 300  # km
 mars_orbit_radius = r_mars + mars_orbit_alt  # km
 
 mars_sma = (d_MS + d_ES) # km (major axis of Mars orbit)
@@ -49,12 +51,17 @@ v_inf_mars = v_hel_mars - v_mars_orbit
 
 
 # Phase 4: Circularization at altitude
+e_mars = 0.8537
+a_mars = mars_orbit_radius/(1-e_mars)
+r_apo_mars = 2*a_mars - mars_orbit_radius
+print(r_apo_mars)
+v_mars_apo = np.sqrt(mu_mars/r_apo_mars)
+delta_v_inclination = np.sqrt(2 * v_mars_apo**2 * (1 - np.cos(np.radians(93))))
 v_apo_mars = np.sqrt((2*mu_mars/mars_orbit_radius) + v_inf_mars**2)
-delta_v_inclination = np.sqrt(2*v_mars**(2) *(1-np.cos(93)))
-delta_v_2= np.abs(v_mars - v_apo_mars)
+
+delta_v_2= np.abs(v_mars_apo - v_apo_mars)
 
 # Phase 5: Station Keeping (15 m/s per year for 4.5 years)
-
 delta_v_station_keeping = delta_v_per_year * 4.5 / 1000  # km/s
 
 # Phase 6: End-of-Life Decommissioning Burn
@@ -65,7 +72,8 @@ total_delta_v = (
     delta_v_launch+
     delta_v_1+
     delta_v_inclination+
-    delta_v_2+
+    #delta_v_2+
+
     delta_v_station_keeping+
     delta_v_deorbit
 )
