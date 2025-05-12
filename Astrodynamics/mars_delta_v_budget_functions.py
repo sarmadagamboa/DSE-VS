@@ -34,7 +34,7 @@ def compute_capture_orbit(mars_orbit_radius):
     e_mars = 0.8537
     a_mars = mars_orbit_radius / (1 - e_mars)
     r_apo_mars = 2 * a_mars - mars_orbit_radius
-    v_mars_apo = np.sqrt(mu_mars / r_apo_mars)
+    v_mars_apo = np.sqrt(mu_mars * (-1 / a_mars + 2 / r_apo_mars))
     v_mars_per = np.sqrt(mu_mars * (-1 / a_mars + 2 / mars_orbit_radius))
     return r_apo_mars, v_mars_apo, v_mars_per, a_mars
 
@@ -144,11 +144,11 @@ def main(use_aerobraking=True, inclination_midcourse=False, leo_alt=200, mars_or
         delta_v_inclination = compute_mars_inclination_change(v_mars_circ)
         print("Aerobraking disabled — full circularization burn required.")
     elif not inclination_midcourse and use_aerobraking:
-        delta_v_2 = np.abs(v_mars_per - v_mars_circ)
+        delta_v_2 = np.abs(v_mars_per - v_mars_circ) + 20
         delta_v_inclination = compute_mars_inclination_change(v_mars_apo)
         print("Aerobraking enabled — circularization ΔV saved.")
-    elif inclination_midcourse:
-        delta_v_2 = compute_mars_circularization(v_inf_mars, mars_orbit_radius, v_mars_circ)
+    elif inclination_midcourse and use_aerobraking:
+        delta_v_2 = np.abs(v_mars_per - v_mars_circ) + 20
         delta_v_inclination = 20 / 1000  # 20 m/s
         print("Inclination changed midcourse.")
     else:
@@ -158,14 +158,12 @@ def main(use_aerobraking=True, inclination_midcourse=False, leo_alt=200, mars_or
     delta_v_station_keeping = compute_station_keeping(years=4.5, delta_v_per_year=60)
     delta_v_deorbit = compute_deorbit()
 
-    total_delta_v = (
+    total_delta_v_launcher = (
         delta_v_launch +
-        delta_v_1 +
-        delta_v_inclination +
-        delta_v_2 +
-        delta_v_station_keeping +
-        delta_v_deorbit
+        delta_v_1
     )
+
+    total_delta_v_spacecraft = (delta_v_inclination + delta_v_2 + delta_v_station_keeping + delta_v_deorbit)
 
     # === OUTPUT ===
     print(f"\nEccentricity of transfer orbit: {e:.4f}")
@@ -177,7 +175,8 @@ def main(use_aerobraking=True, inclination_midcourse=False, leo_alt=200, mars_or
     print(f"ΔV: Station Keeping (4.5 yrs)  = {delta_v_station_keeping:.3f} km/s")
     print(f"ΔV: End-of-Life Deorbit        = {delta_v_deorbit:.3f} km/s")
     print("------------------------------------------")
-    print(f"Total Mission ΔV               = {total_delta_v:.3f} km/s")
+    print(f"Total Mission ΔV (launcher)    = {total_delta_v_launcher:.3f} km/s")
+    print(f"Total Mission ΔV (spacecraft)  = {total_delta_v_spacecraft:.3f} km/s")
 
 
 
@@ -372,6 +371,6 @@ def simulate_and_plot2():
 
 
 if __name__ == "__main__":
-    main(use_aerobraking=True, inclination_midcourse=False, leo_alt=200, mars_orbit_alt=400)
-    simulate_and_plot()
-    simulate_and_plot2()
+    main(use_aerobraking=True, inclination_midcourse=False, leo_alt=200, mars_orbit_alt=300)
+    #simulate_and_plot()
+    #simulate_and_plot2()
