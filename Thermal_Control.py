@@ -1,6 +1,4 @@
 import numpy as np
-from scipy.integrate import quad
-import math 
 
 # Operating Ranges:
 
@@ -25,63 +23,87 @@ import math
 # Power - solar array area 8.4
 # Solar array: 10 to 25 C
 
-#standard variables
-R_mars = 3390       #km
-h_orbit = 200       #km
-sig = 5.67 * 10**(-8)            #boltzman constant
-T_Mars = 209.8
-S_mars = 586.2
-Albedo_mars = 0.25
+# ─── Physical Constants ────────────────────────────────────────────────────────
+SIGMA = 5.67e-8        # Stefan–Boltzmann constant [W/m²·K⁴]
 
-#hot variables
-alpha_s = 0.28                  #solar absorptivity, 127-mum silvered teflon after 5 years
-eps = 0.75                      #emissivity 127-mum silvered teflon
-Q_loss = 0                      #Heat lost or gained by surrouding structure
-Q_d = 1150                      #internal energy dissipation
-T_int = 30 + 273                    #Internal temperature
-solar_incident = 0              #solar incidence angle
+# ─── Mars & Orbit Parameters ─────────────────────────────────────────────────
+R_MARS = 3389.5        # Mars radius [km]
+H_ORBIT = 200.0        # Orbital altitude [km]
+NU = H_ORBIT / R_MARS  # Dimensionless altitude ratio (a/R)
 
-# #cold variables
-# alpha_s = 0.08                  #solar absorptivity, 127-mum silvered teflon BOL
-# eps = 0.79                      #emissivity, 127-mum silvered teflon
-# Q_loss =                        #Heat lost or gained by surrouding structure
-# Q_d = 950                       #internal energy dissipation
+T_MARS = 209.8         # Mars effective temperature [K]
+S_MARS = 586.2         # Solar constant at Mars [W/m²]
+ALBEDO_MARS = 0.25     # Mars Bond albedo
+
+# ─── Hot-Case Thermal Properties ─────────────────────────────────────────────
+ALPHA_HOT = 0.28           # Solar absorptivity (127 μm Teflon, EOL)
+EPSILON_HOT = 0.75         # Emissivity (127 μm Teflon)
+Q_DISS_HOT = 1150.0        # Internal dissipation [W]
+Q_LOSS_HOT = 0.0           # Structural heat exchange [W]
+T_INTERNAL = 30.0 + 273.15 # Internal set-point [K]
+SOLAR_ANGLE = 0.0          # Incidence angle (rad)
+
+# ─── Cold-Case Thermal Properties ────────────────────────────────────────────
+ALPHA_COLD = 0.08       # Solar absorptivity (127 μm Teflon, BOL)
+EPSILON_COLD = 0.79     # Emissivity (127 μm Teflon)
+Q_DISS_COLD = 950.0     # Internal dissipation [W]
+Q_LOSS_COLD = 0.0       # Structural heat exchange [W]
 
 
-#Horizontal F factor as function of nu
-def F12H(nu):
-    # Define the integrand function
-    def integrand(phi):
-        A = 1 + (1 + nu)**2 - 2 * (1 + nu) * np.cos(phi) - np.sin(phi)**2
-        B = 1 + (1 + nu)**2 - 2 * (1 + nu) * np.cos(phi)
-        numerator = np.sqrt(A) * (np.sin(phi) * np.cos(phi) - np.sin(phi)**3)
-        denominator = B**2
-        return numerator / denominator
+def compute_fluxes(view_factor=0.9):
+    """
+    Returns the three solar/planetary fluxes [W/m²] incident on a horizontal surface:
+      - q_sol: direct solar
+      - q_alb: Mars-albedo reflected
+      - q_ir: Mars infrared
+    """
+    q_sol = S_MARS * np.cos(SOLAR_ANGLE)
+    q_alb = S_MARS * ALBEDO_MARS * view_factor
+    q_ir  = view_factor * SIGMA * T_MARS**4
+    return q_sol, q_alb, q_ir
 
-    # Upper limit of integration
-    upper_limit = np.arccos(1 / (1 + nu))
 
-    # Compute the integral
-    result, _ = quad(integrand, 0, upper_limit)
+def compute_radiator_area(q_sol, q_alb, q_ir):
+    """
+    Radiator area [m²] needed in the hot case to reject Q_DISS_HOT:
+    A = (Q_DISS_HOT - Q_LOSS_HOT) / [ ε·σ·T_int⁴ 
+                                     - α·(q_sol+q_alb) 
+                                     + ε·q_ir ]
+    """
+    numerator = Q_DISS_HOT - Q_LOSS_HOT
+    denominator = (
+        EPSILON_HOT * SIGMA * T_INTERNAL**4
+        - ALPHA_HOT * (q_sol + q_alb)
+        + EPSILON_HOT * q_ir
+    )
+    return numerator / denominator
 
-    return 2 * result
 
-#q_ir calculation
-nu = h_orbit / R_mars
-F = F12H(nu)
-M_IR = sig * T_Mars**4
-q_ir = F * M_IR #W/m^2
+def compute_cold_temperature(A_rad, q_sol, q_alb, q_ir):
+    """
+    Equilibrium cold-case temperature [°C] of that same radiator area:
+    Solve σ·T⁴ = (Q_DISS_COLD - Q_LOSS_COLD)/(ε·A)
+                 + (α/ε)·(q_sol+q_alb) + q_ir
+    """
+    term = (
+        (Q_DISS_COLD - Q_LOSS_COLD) / (EPSILON_COLD * A_rad)
+        + (ALPHA_COLD / EPSILON_COLD) * (q_sol + q_alb)
+        + q_ir
+    )
+    T_cold_K = (term / SIGMA) ** 0.25
+    return T_cold_K - 273.15
 
-#q_sol
-q_sol = S_mars * math.cos(solar_incident)
 
-#q_A
-q_A = S_mars * Albedo_mars * F
+def main():
+    q_sol, q_alb, q_ir = compute_fluxes()
+    A_rad = compute_radiator_area(q_sol, q_alb, q_ir)
+    T_cold = compute_cold_temperature(A_rad, q_sol, q_alb, q_ir)
 
-#Radiator area (hot data)
-A_rad = (Q_d - Q_loss) / (eps * sig * T_int^4 - alpha_s * (q_sol + q_A) + eps * q_ir)
+    print(f"Dimensionless altitude ν = a/Rₘₐᵣₛ: {NU:.4f}")
+    print(f"Radiator area       : {A_rad:.2f} m²")
+    print(f"Cold-case temp      : {T_cold:.2f} °C")
+    print(f"Fluxes [W/m²]       : q_sol={q_sol:.2f}, q_alb={q_alb:.2f}, q_ir={q_ir:.2f}")
 
-#Cold temperature (cold data)
-sigT4 = (Q_d - Q_loss) / (eps * A_rad) + alpha_s / eps *(q_sol +q_A) + q_ir
-T_cold = sigT4**(1/4) / sig
 
+if __name__ == "__main__":
+    main()
