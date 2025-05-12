@@ -70,18 +70,27 @@ v_inf_mars = v_hel_mars - v_mars_orbit
 # r_apo_mars = compute_mars_inclination_change(v_inf_mars)
 
 # delta_v_2 = 0  # Aerobraking assumed
-use_aerobraking = True  
+use_aerobraking = False  
+inclination_midcourse = False
+# if use_aerobraking:
+#     delta_v_2 = 0
+#     print("Aerobraking enabled — circularization ΔV saved.")
+# else:
+    
+#     delta_v_inclination = compute_mars_inclination_change(v_mars_circ)[0]
+#     print("Aerobraking disabled — full circularization burn required.")
 
-if use_aerobraking:
-    delta_v_2 = 0
-    delta_v_inclination = compute_mars_inclination_change(v_mars_apo)[0]
-    print("Aerobraking enabled — circularization ΔV saved.")
-else:
+if not inclination_midcourse and not use_aerobraking:
     delta_v_2 = compute_mars_circularization(v_inf_mars)
     delta_v_inclination = compute_mars_inclination_change(v_mars_circ)[0]
-    print("Aerobraking disabled — full circularization burn required.")
-
-
+    print("Aerobraking enabled — circularization ΔV saved.")
+    
+elif not inclination_midcourse and use_aerobraking:
+    delta_v_2 = np.abs(v_mars_apo - v_mars_circ)
+    delta_v_inclination = compute_mars_inclination_change(v_mars_apo)[0]
+else:
+    delta_v_2 = compute_mars_circularization(v_inf_mars)
+    delta_v_inclination = 20/1000
 
 delta_v_station_keeping = compute_station_keeping()
 delta_v_deorbit = compute_deorbit()
