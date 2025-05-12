@@ -30,6 +30,8 @@ SIGMA = 5.67e-8        # Stefan–Boltzmann constant [W/m²·K⁴]
 R_MARS = 3389.5        # Mars radius [km]
 H_ORBIT = 200.0        # Orbital altitude [km]
 NU = H_ORBIT / R_MARS  # Dimensionless altitude ratio (a/R)
+r = 1.5                # Cylinder radius [m]
+l = 4.6                # Cylinder length [m]
 
 T_MARS = 209.8         # Mars effective temperature [K]
 S_MARS = 586.2         # Solar constant at Mars [W/m²]
@@ -116,7 +118,7 @@ def main():
     q_sol, q_alb, q_ir = compute_fluxes()
     A_rad = compute_radiator_area(q_sol, q_alb, q_ir)
     T_cold = compute_cold_temperature(A_rad, q_sol, q_alb, q_ir)
-    A_tot = cylinder_area(1.5, 4.6)  # Cylinder dimensions [m]
+    A_tot = cylinder_area(r, l)  # Cylinder dimensions [m]
     TCS_mass = compute_TCS_mass(A_rad, A_tot)
 
     print(f"Dimensionless altitude ν = a/Rₘₐᵣₛ: {NU:.4f}")
