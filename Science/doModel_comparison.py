@@ -31,12 +31,12 @@ def plot_comparative_sst_measurements():
             'color': 'green'
         },
         'Doppler': {
-            'epsilon': 1e-5,
+            'epsilon': 1e-5,  #1e-5 K-band 
             'frequency': 0.0167,
             'color': 'red'
         },
         'QGG': {
-            'epsilon': 1e-9,
+            'epsilon': 1e-10,
             'frequency': 0.5,
             'color': 'purple'
         }
@@ -60,7 +60,7 @@ def plot_comparative_sst_measurements():
             # SST-hl formula
             with np.errstate(divide='ignore', invalid='ignore'):
                 Fl = l_range / (np.sqrt(2 + 4 * l_range + 4 * l_range**2))
-                Fl *= (1 / np.abs(np.sin(l_range * gamma / 2) + 1e-10))
+                Fl *= (1 / np.abs(np.sin(l_range * gamma / 2)))
             
             sigma = (epsilon / np.sqrt(N)) * (1 / (n * r)) * ((r / R)**l_range) * Fl
             
