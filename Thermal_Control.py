@@ -1,10 +1,13 @@
 import numpy as np
-import math 
 
 # ─── To do ─────────────────────────────────────────────
 # automate temperature range selection
 # add heaters
 # add Q_LOSS
+# look into battery
+# look into payload
+# add MLI
+# loook into transfer orbits
 
 # ─── Mars Thermal Control System ─────────────────────────────────────────────
 # Operating Ranges:
@@ -40,18 +43,17 @@ T_POWER = [0.0, 20.0]          # Battery operating range [°C]
 
 T_COLD_LIST = [T_PAYLOAD[0], T_ADCS[0], T_TTC[0], T_STRUCTURE[0], T_PROPULSION[0], T_POWER[0]]
 T_HOT_LIST = [T_PAYLOAD[1], T_ADCS[1], T_TTC[1], T_STRUCTURE[1], T_PROPULSION[1], T_POWER[1]]
+SUBSYSTEM_NAMES = ['Payload', 'ADCS', 'TT&C', 'Structure', 'Propulsion', 'Power']
+T_HOT = 30.0 # min(T_HOT_LIST) # Hot-case temperature [°C]
 
-#T_COLD = max(T_COLD_LIST)  # Cold-case temperature [°C]
-T_HOT = min(T_HOT_LIST)    # Hot-case temperature [°C]
-
-# ─── Heaters ────────────────────────────────────────────────────────
+# ─── Payload heater ────────────────────────────────────────────────────────
 # Patch heaters with solid-state thermostat have accuracy of less than 0.1 C 
-A_ACC = 26 * 26 * 6               # CAI area [cm²]
-A_LRI = 40 * 40 * 2 + 40 * 20 * 4 # LRI area [cm²]
-A_PAYLOAD = A_ACC + A_LRI         # Payload area [cm²]
-P_HEATER = 0.5  
-U = 2.5                   # Heater power [W/cm²]
-TCS_POWER = U * A_PAYLOAD/10000 * (28.5 - 19) # Power needed to heat the payload [W]
+A_CAI = 0.5 * 0.5 * 2 +0.5 * 1.0 * 4              # CAI area [m²]
+A_ACC = 0.26 * 0.26 * 6                           # ACC area [m²]
+A_LRI = 0.40 * 0.40 * 2 + 0.40 * 0.20 * 4         # LRI area [m²]
+A_PAYLOAD = A_CAI + A_LRI                         # Payload area [m²]
+U = 2.5                                           # Heater power [W/m²]
+T_PAYLOAD_AVG = (T_PAYLOAD[0] + T_PAYLOAD[1]) / 2 # Average payload temperature [°C]
 
 # ─── Physical Constants ────────────────────────────────────────────────────────
 SIGMA = 5.67e-8        # Stefan–Boltzmann constant [W/m²·K⁴]
@@ -60,9 +62,10 @@ SIGMA = 5.67e-8        # Stefan–Boltzmann constant [W/m²·K⁴]
 R_MARS = 3389.5        # Mars radius [km]
 H_ORBIT = 200.0        # Orbital altitude [km]
 NU = H_ORBIT / R_MARS  # Dimensionless altitude ratio (a/R)
-r = 1.5                # Cylinder radius [m]
-l = 4.6                # Cylinder length [m]
-Q_DISS = 800.0         # Internal dissipation [W]
+w = 3.0                # Satellite width [m]
+l = 3.0                # Satellite length [m]
+h = 2.0                # Satellite height [m]
+Q_DISS = 1250.0        # Internal dissipation [W]
 T_MARS = 209.8         # Mars effective temperature [K]
 S_MARS = 586.2         # Solar constant at Mars [W/m²]
 ALBEDO_MARS = 0.25     # Mars Bond albedo
@@ -80,12 +83,33 @@ ALPHA_COLD = 0.08          # Solar absorptivity (127 μm Teflon, BOL)
 EPSILON_COLD = 0.79        # Emissivity (127 μm Teflon)
 Q_DISS_COLD = Q_DISS * 0.9 # Internal dissipation [W] with margin
 Q_LOSS_COLD = 0.0          # Structural heat exchange [W]
+T_MIN_COLD = 15.0          # Minimum operating temperature (T_PROPULSION) [°C]
 
-def cylinder_area(r, l):
+# ─── Functions ────────────────────────────────────────────────────────────────
+def filter_subsystems_above_Tcold(T_cold, T_cold_list, names):
+    """
+    Returns a list of (subsystem_name, min_temp) tuples for those subsystems
+    whose minimum operating temperature is higher than T_cold.
+    """
+    return [
+        (name, t_min)
+        for name, t_min in zip(names, T_cold_list)
+        if t_min > T_cold
+    ]
+
+def compute_payload_heater_power(T_cold):
+    """
+    Returns the power needed to heat the payload [W] based on its area [m²]:
+    P = U * A * (T_hot - T_cold)
+    where U is the heater power [W/m²] and T_hot and T_cold are the hot and cold temperatures.
+    """
+    return U * A_PAYLOAD * (T_PAYLOAD_AVG - T_cold)
+
+def compute_satellite_area(w, l, h):
     """
     Total surface area of a cylinder with radius r and length l.
     """
-    return 2 * math.pi * r * (l + r)
+    return 2*(w*l+w*h+h*l)
 
 def compute_TCS_mass(A_rad, A_tot):
     """
@@ -94,11 +118,10 @@ def compute_TCS_mass(A_rad, A_tot):
     where ρ is the density of the radiator material and t is its thickness.
     """
     # Material properties (example values)
-    rho_teflon = 2700.0  # Density of aluminum [kg/m³]
-    t = 127e-6     # Thickness of the radiator [m]
+    rho_teflon = 0.27  # Density of aluminum [kg/m²]
     A_MLI = A_tot - A_rad
     rho_MLI = 0.73 # Density of MLI [kg/m²] for 15 layers
-    return A_rad * rho_teflon * t + A_MLI * rho_MLI
+    return A_rad * rho_teflon + A_MLI * rho_MLI
 
 def compute_fluxes(view_factor=0.9):
     """
@@ -143,21 +166,56 @@ def compute_cold_temperature(A_rad, q_sol, q_alb, q_ir):
     T_cold_K = (term / SIGMA) ** 0.25
     return T_cold_K - 273.15
 
+def compute_heater_power_coldcase(q_sol, q_alb, q_ir, A_rad):
+    """
+    Returns Q_heater [W] required in the cold case:
+      Q_heater = Q_loss
+               + A_r*( ε·σ·T_min^4   − [ α_s*(q_sol+q_alb) + ε·q_ir ] )
+               − Q_d
+    """
+    # convert target temp to Kelvin
+    T_min_K = T_MIN_COLD + 273.15
+
+    # radiative power out at T_min
+    rad_term = EPSILON_COLD * SIGMA * T_min_K**4
+
+    # environmental loading
+    env_term = ALPHA_COLD * (q_sol + q_alb) + EPSILON_COLD * q_ir
+
+    # heater power
+    P = Q_LOSS_COLD + A_rad * (rad_term - env_term) - Q_DISS_COLD
+    if P < 0:
+        print("T_cold > T_min, no heating power required.")
+        return 0.0
+    else:
+        return P
 
 def main():
     q_sol, q_alb, q_ir = compute_fluxes()
+    A_tot = compute_satellite_area(w, l, h)
     A_rad = compute_radiator_area(q_sol, q_alb, q_ir)
-    T_cold = compute_cold_temperature(A_rad, q_sol, q_alb, q_ir)
-    A_tot = cylinder_area(r, l)  # Cylinder dimensions [m]
+    A_MLI = A_tot - A_rad
+    T_cold = compute_cold_temperature(A_rad, q_sol, q_alb, q_ir)  
     TCS_mass = compute_TCS_mass(A_rad, A_tot)
+    subsys_above = filter_subsystems_above_Tcold(T_cold, T_COLD_LIST, SUBSYSTEM_NAMES)
+    P_PAYLOAD = compute_payload_heater_power(T_cold)
+    P_GENERAL = compute_heater_power_coldcase(q_sol, q_alb, q_ir, A_rad)
+    P_TOT = P_PAYLOAD + P_GENERAL
 
-    print(f"Dimensionless altitude ν = a/Rₘₐᵣₛ: {NU:.4f}")
+    # Print results
     print(f"Radiator area       : {A_rad:.2f} m²")
+    print(f"MLI area            : {A_MLI:.2f} m²")
+    print(f"Payload area        : {A_PAYLOAD:.2f} m²")
     print(f"Cold-case temp      : {T_cold:.2f} °C")
     print(f"Fluxes [W/m²]       : q_sol={q_sol:.2f}, q_alb={q_alb:.2f}, q_ir={q_ir:.2f}")
     print(f"Total TCS mass      : {TCS_mass:.2f} kg")
-    print(f"TCS Power           : {TCS_POWER:.2f} W")
-
+    print(f"Payload heater power: {P_PAYLOAD:.2f} W")
+    print(f"General heater power: {P_GENERAL:.2f} W")
+    print(f"Total power         : {P_TOT:.2f} W")
+    # print(f"Max T allowed       : {T_HOT:.2f} °C")
+    print("Subsystems requiring heating:")
+    for name, t_min in subsys_above:
+        print(f" - {name}: {t_min:.1f} °C > {T_cold:.2f} °C")
 
 
 
