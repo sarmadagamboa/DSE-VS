@@ -364,6 +364,7 @@ def plot_sst_dist_satellites():
     plt.show()
 
 
+
 def plot_sst_acc_vs_cai():
     # Constants
     R = 3.3895e6  # Mars radius (m)
