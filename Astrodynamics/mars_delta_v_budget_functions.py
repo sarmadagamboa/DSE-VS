@@ -12,6 +12,7 @@ mu_earth = (G * M_earth).to(u.km**3 / u.s**2).value
 mu_mars = (G * M_mars).to(u.km**3 / u.s**2).value
 r_earth = R_earth.to(u.km).value
 r_mars = R_mars.to(u.km).value
+
 mu_sun = 1.32712440018e11  # km^3/s^2
 rho_0 = 0.020  # Atmospheric density at the surface of Mars (kg/m³)
 H = 11.1  # Scale height of the Martian atmosphere (km)
@@ -56,6 +57,9 @@ def compute_mars_inclination_change(v_orbit):
 def compute_mars_circularization(v_inf_mars, mars_orbit_radius, v_mars_circ):
     v_apo_mars = np.sqrt((2 * mu_mars / mars_orbit_radius) + v_inf_mars**2)
     return np.abs(v_mars_circ - v_apo_mars)
+def compute_mars_period(mars_orbit_radius):
+    T_mars = 2 * np.pi * np.sqrt(((mars_orbit_radius)**3) / mu_mars)
+    return T_mars
 
 def compute_station_keeping(years=4.5, delta_v_per_year=60):
     return delta_v_per_year * years / 1000  # km/s
@@ -89,7 +93,7 @@ def compute_atmospheric_drag(mars_altitude, spacecraft_velocity, spacecraft_mass
     print(f"Atmospheric density at {mars_altitude} km: {rho} kg/m³")
     # Compute drag force
     drag_force = 0.5 * rho * (spacecraft_velocity*1000)**2 * drag_coefficient * cross_sectional_area  # Force in N
-
+    print(f"Drag force: {drag_force} N")
     # Compute deceleration due to drag
     deceleration = drag_force / spacecraft_mass  # Acceleration in m/s²
     delta_v_drag = deceleration * delta_t  # Velocity change in m/s
@@ -178,7 +182,6 @@ def main(use_aerobraking, inclination_midcourse, leo_alt, mars_orbit_alt, spacec
     mars_orbit_radius = r_mars + mars_orbit_alt
     v_leo = np.sqrt(mu_earth / leo_radius)
     v_mars_circ = np.sqrt(mu_mars / mars_orbit_radius)
-    
     # === CALCULATIONS ===
     delta_v_launch = compute_launch_to_leo(leo_radius)
     #delta_v_1, transfer_a, e, v_inf_leo = compute_transfer_injection(leo_radius, mars_orbit_radius, v_leo)
@@ -219,7 +222,8 @@ def main(use_aerobraking, inclination_midcourse, leo_alt, mars_orbit_alt, spacec
     )
 
     total_delta_v_spacecraft = (delta_v_inclination + delta_v_2 + delta_v_station_keeping + delta_v_deorbit + delta_v_drag)
-
+    period = compute_mars_period(mars_orbit_radius)
+    print(f"Period of Mars orbit: {period/60:.2f} minutes")
     # === OUTPUT ===
     print(f"\nEccentricity of transfer orbit: {e:.4f}")
     print("=== Mars Mission ΔV Budget ===")
@@ -229,7 +233,7 @@ def main(use_aerobraking, inclination_midcourse, leo_alt, mars_orbit_alt, spacec
     print(f"ΔV: Mars Capture & Circularization       = {delta_v_2:.3f} km/s")
     print(f"ΔV: Station Keeping (4.5 yrs)  = {delta_v_station_keeping:.3f} km/s")
     print(f"ΔV: End-of-Life Deorbit        = {delta_v_deorbit:.3f} km/s")
-    print(f"ΔV: Atmospheric Drag           = {delta_v_drag:.3f} km/s")
+    print(f"ΔV: Atmospheric Drag           = {delta_v_drag/1000:.3f} km/s")
     print("------------------------------------------")
     print(f"Total Mission ΔV (launcher)    = {total_delta_v_launcher:.3f} km/s")
     print(f"Total Mission ΔV (spacecraft)  = {total_delta_v_spacecraft:.3f} km/s")
@@ -427,10 +431,12 @@ def simulate_and_plot2():
 
 
 if __name__ == "__main__":
-    main(use_aerobraking=True, inclination_midcourse= True, leo_alt=200, mars_orbit_alt = 200, spacecraft_mass = 850, Cd = 2.2, cross_sectional_area = 7, delta_t = 4.5*365*24*3600)
-    main(use_aerobraking=False, inclination_midcourse= False, leo_alt=200, mars_orbit_alt = 200, spacecraft_mass = 850, Cd = 2.2, cross_sectional_area = 7, delta_t = 4.5*365*24*3600)
-    main(use_aerobraking=True, inclination_midcourse= False, leo_alt=200, mars_orbit_alt = 200, spacecraft_mass = 850, Cd = 2.2, cross_sectional_area = 7, delta_t = 4.5*365*24*3600)
-    main(use_aerobraking=False, inclination_midcourse= True, leo_alt=200, mars_orbit_alt = 200, spacecraft_mass = 850, Cd = 2.2, cross_sectional_area = 7, delta_t = 4.5*365*24*3600)
+    main(use_aerobraking=True, inclination_midcourse= True, leo_alt=200, mars_orbit_alt = 200, spacecraft_mass = 850, Cd = 2.6, cross_sectional_area = 7, delta_t = 3.8*365*24*3600)
+    main(use_aerobraking=False, inclination_midcourse= False, leo_alt=200, mars_orbit_alt = 200, spacecraft_mass = 850, Cd = 2.6, cross_sectional_area = 7, delta_t = 3.8*365*24*3600)
+    main(use_aerobraking=True, inclination_midcourse= False, leo_alt=200, mars_orbit_alt = 200, spacecraft_mass = 850, Cd = 2.6, cross_sectional_area = 7, delta_t = 3.8*365*24*3600)
+    main(use_aerobraking=False, inclination_midcourse= True, leo_alt=200, mars_orbit_alt = 200, spacecraft_mass = 850, Cd = 2.6, cross_sectional_area = 7, delta_t = 3.8*365*24*3600)
+    period = compute_mars_period(200+r_mars)
+    print(f"Period of Mars orbit: {period/60:.2f} minutes")
     #simulate_and_plot()
     #simulate_and_plot2()
 
