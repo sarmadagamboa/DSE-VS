@@ -1,5 +1,12 @@
 import numpy as np
 import math 
+
+# ─── To do ─────────────────────────────────────────────
+# automate temperature range selection
+# add heaters
+# add Q_LOSS
+
+# ─── Mars Thermal Control System ─────────────────────────────────────────────
 # Operating Ranges:
 
 # Payload:
@@ -32,7 +39,7 @@ H_ORBIT = 200.0        # Orbital altitude [km]
 NU = H_ORBIT / R_MARS  # Dimensionless altitude ratio (a/R)
 r = 1.5                # Cylinder radius [m]
 l = 4.6                # Cylinder length [m]
-
+Q_DISS = 800.0        # Internal dissipation [W]
 T_MARS = 209.8         # Mars effective temperature [K]
 S_MARS = 586.2         # Solar constant at Mars [W/m²]
 ALBEDO_MARS = 0.25     # Mars Bond albedo
@@ -40,16 +47,16 @@ ALBEDO_MARS = 0.25     # Mars Bond albedo
 # ─── Hot-Case Thermal Properties ─────────────────────────────────────────────
 ALPHA_HOT = 0.28           # Solar absorptivity (127 μm Teflon, EOL)
 EPSILON_HOT = 0.75         # Emissivity (127 μm Teflon)
-Q_DISS_HOT = 1150.0        # Internal dissipation [W]
+Q_DISS_HOT = Q_DISS * 1.1  # Internal dissipation [W] with margin
 Q_LOSS_HOT = 0.0           # Structural heat exchange [W]
 T_INTERNAL = 30.0 + 273.15 # Internal set-point [K]
 SOLAR_ANGLE = 0.0          # Incidence angle (rad)
 
 # ─── Cold-Case Thermal Properties ────────────────────────────────────────────
-ALPHA_COLD = 0.08       # Solar absorptivity (127 μm Teflon, BOL)
-EPSILON_COLD = 0.79     # Emissivity (127 μm Teflon)
-Q_DISS_COLD = 950.0     # Internal dissipation [W]
-Q_LOSS_COLD = 0.0       # Structural heat exchange [W]
+ALPHA_COLD = 0.08          # Solar absorptivity (127 μm Teflon, BOL)
+EPSILON_COLD = 0.79        # Emissivity (127 μm Teflon)
+Q_DISS_COLD = Q_DISS * 0.9 # Internal dissipation [W] with margin
+Q_LOSS_COLD = 0.0          # Structural heat exchange [W]
 
 def cylinder_area(r, l):
     """
@@ -126,6 +133,8 @@ def main():
     print(f"Cold-case temp      : {T_cold:.2f} °C")
     print(f"Fluxes [W/m²]       : q_sol={q_sol:.2f}, q_alb={q_alb:.2f}, q_ir={q_ir:.2f}")
     print(f"Total TCS mass      : {TCS_mass:.2f} kg")
+
+
 
 
 if __name__ == "__main__":
