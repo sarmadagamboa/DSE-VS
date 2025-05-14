@@ -30,6 +30,29 @@ import math
 # Power - solar array area 8.4
 # Solar array: 10 to 25 C
 
+# ─── Operating temperature ranges ────────────────────────────────────────────────────────
+T_PAYLOAD = [27.0, 30.0]       # Payload operating range [°C]
+T_ADCS = [0.0, 30.0]           # ADCS operating range [°C]
+T_TTC = [-20.0, 60.0]          # TT&C operating range [°C]
+T_STRUCTURE = [-100.0, 100.0]  # Structure operating range [°C]
+T_PROPULSION = [15.0, 50.0]    # Propellant tank operating range [°C]
+T_POWER = [0.0, 20.0]          # Battery operating range [°C]
+
+T_COLD_LIST = [T_PAYLOAD[0], T_ADCS[0], T_TTC[0], T_STRUCTURE[0], T_PROPULSION[0], T_POWER[0]]
+T_HOT_LIST = [T_PAYLOAD[1], T_ADCS[1], T_TTC[1], T_STRUCTURE[1], T_PROPULSION[1], T_POWER[1]]
+
+#T_COLD = max(T_COLD_LIST)  # Cold-case temperature [°C]
+T_HOT = min(T_HOT_LIST)    # Hot-case temperature [°C]
+
+# ─── Heaters ────────────────────────────────────────────────────────
+# Patch heaters with solid-state thermostat have accuracy of less than 0.1 C 
+A_ACC = 26 * 26 * 6               # CAI area [cm²]
+A_LRI = 40 * 40 * 2 + 40 * 20 * 4 # LRI area [cm²]
+A_PAYLOAD = A_ACC + A_LRI         # Payload area [cm²]
+P_HEATER = 0.5  
+U = 2.5                   # Heater power [W/cm²]
+TCS_POWER = U * A_PAYLOAD/10000 * (28.5 - 19) # Power needed to heat the payload [W]
+
 # ─── Physical Constants ────────────────────────────────────────────────────────
 SIGMA = 5.67e-8        # Stefan–Boltzmann constant [W/m²·K⁴]
 
@@ -39,18 +62,18 @@ H_ORBIT = 200.0        # Orbital altitude [km]
 NU = H_ORBIT / R_MARS  # Dimensionless altitude ratio (a/R)
 r = 1.5                # Cylinder radius [m]
 l = 4.6                # Cylinder length [m]
-Q_DISS = 800.0        # Internal dissipation [W]
+Q_DISS = 800.0         # Internal dissipation [W]
 T_MARS = 209.8         # Mars effective temperature [K]
 S_MARS = 586.2         # Solar constant at Mars [W/m²]
 ALBEDO_MARS = 0.25     # Mars Bond albedo
 
 # ─── Hot-Case Thermal Properties ─────────────────────────────────────────────
-ALPHA_HOT = 0.28           # Solar absorptivity (127 μm Teflon, EOL)
-EPSILON_HOT = 0.75         # Emissivity (127 μm Teflon)
-Q_DISS_HOT = Q_DISS * 1.1  # Internal dissipation [W] with margin
-Q_LOSS_HOT = 0.0           # Structural heat exchange [W]
-T_INTERNAL = 30.0 + 273.15 # Internal set-point [K]
-SOLAR_ANGLE = 0.0          # Incidence angle (rad)
+ALPHA_HOT = 0.28            # Solar absorptivity (127 μm Teflon, EOL)
+EPSILON_HOT = 0.75          # Emissivity (127 μm Teflon)
+Q_DISS_HOT = Q_DISS * 1.1   # Internal dissipation [W] with margin
+Q_LOSS_HOT = 0.0            # Structural heat exchange [W]
+T_INTERNAL = T_HOT + 273.15 # Internal set-point [K]
+SOLAR_ANGLE = 0.0           # Incidence angle (rad)
 
 # ─── Cold-Case Thermal Properties ────────────────────────────────────────────
 ALPHA_COLD = 0.08          # Solar absorptivity (127 μm Teflon, BOL)
@@ -133,6 +156,7 @@ def main():
     print(f"Cold-case temp      : {T_cold:.2f} °C")
     print(f"Fluxes [W/m²]       : q_sol={q_sol:.2f}, q_alb={q_alb:.2f}, q_ir={q_ir:.2f}")
     print(f"Total TCS mass      : {TCS_mass:.2f} kg")
+    print(f"TCS Power           : {TCS_POWER:.2f} W")
 
 
 
