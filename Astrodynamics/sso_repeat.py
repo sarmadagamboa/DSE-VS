@@ -1,7 +1,7 @@
 import numpy as np
 import pandas as pd
 
-def repeat_sso(days, tol=1e-6, max_iter=100, period_bounds_hr=(1.5, 3.0)):
+def repeat_sso(martian_sols, tol=1e-6, max_iter=100, period_bounds_hr=(1.5, 3.0)):
 
     # Constants
     mu_mars = 42828.376645          # km^3 / s^2
@@ -12,14 +12,14 @@ def repeat_sso(days, tol=1e-6, max_iter=100, period_bounds_hr=(1.5, 3.0)):
 
     results = []
 
-    lower_Q = int(np.floor((days * P_sol) / (period_bounds_hr[1] * 3600)))
-    upper_Q = int(np.ceil((days * P_sol) / (period_bounds_hr[0] * 3600)))
+    lower_Q = int(np.floor((martian_sols * P_sol) / (period_bounds_hr[1] * 3600)))
+    upper_Q = int(np.ceil((martian_sols * P_sol) / (period_bounds_hr[0] * 3600)))
 
     a = R_M + 100                   # guess initial value of a
 
     for Q in range(lower_Q, upper_Q + 1):
 
-        P_omega_true = days * P_sol / Q
+        P_omega_true = martian_sols * P_sol / Q
         a = R_M + 100               # Initial guess
         converged = False
 
@@ -57,4 +57,4 @@ def repeat_sso(days, tol=1e-6, max_iter=100, period_bounds_hr=(1.5, 3.0)):
         
     return results
 
-repeat_sso(days=30)
+repeat_sso(martian_sols=30)
