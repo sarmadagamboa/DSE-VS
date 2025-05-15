@@ -3,7 +3,7 @@ import matplotlib.pyplot as plt
 from scipy.signal import find_peaks
 import matplotlib.cm as cm
 
-def plot_sst():
+def plot_sst_qt():
     # Parameters
     h = np.array([100000, 150000, 200000, 250000, 300000])  # satellite altitudes (m)
     R = 3.3895e6  # Mars radius (m)
@@ -228,7 +228,7 @@ def plot_sst_dist_satellites():
 
 
 
-plot_sst()
+plot_sst_qt()
 plot_sst_v3()
 plot_sst_dist_satellites()
 
