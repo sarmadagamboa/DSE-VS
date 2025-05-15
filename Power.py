@@ -16,22 +16,34 @@ class Mission:
         "Propulsion":   0,
         "Payload":     31,
     }
+    mass_subsystems = {
+        "ADCS":       62,
+        "Structures":  149.7,
+        "TT&C":       40,
+        "CDHS":        10,
+        "Power":       0,  # overwritten a few lines below
+        "Thermal":     28,
+        "Propulsion":   73,
+        "Payload":     150,
+    }
 
-    # Aggregate loads and update the power‑system entry just as you had
+    # power subsystem mass and power estimations based on literature
     power_req_subsystems: float = sum(power_subsystems.values())  # W
     power_subsystems["Power"] = 0.15 * power_req_subsystems       # 15 % margin for the power system itself
+
+    total_mass_subsystems: float = sum(mass_subsystems.values())  # kg
+    mass_subsystems["Power"] = 0.3 * total_mass_subsystems
+    total_mass = sum(mass_subsystems.values())  # kg
 
     # Power requirements
     power_req_eol: float = sum(power_subsystems.values())          # W at end‑of‑life
     power_margin: float = 0.1                                    # 10 % system margin
 
-        # Orbit geometry (example Mars LEO)
+    # Orbit geometry
     period: float = 6529.2                  # s, orbital period
     eclipse: float = 2611.68                # s, eclipse duration
     sunlight: float = period - eclipse      # s, sunlight duration
     theta: float = 30                        # deg, theta angle (worst‑case)
-
-
 
     # Panel & pointing
     offpoint: float = 5.0          # deg off‑pointing for sun‑tracking arrays
@@ -55,9 +67,8 @@ class Mission:
     array_type: int = 0
 
 def kelly_cos(theta_deg):
-
-    
     """Kelly cosine approximation for body fixed panels (>60 deg)."""
+    
     KELLY = {0: 1.00, 30: 0.866, 50: 0.635, 60: 0.450, 80: 0.100, 85: 0.000}
     keys = np.array(sorted(KELLY))
     vals = np.array([KELLY[k] for k in keys])
@@ -109,10 +120,6 @@ def main():
 
     area, p_eol, p_bol, p_sa, inc = solar_array_sizing(m)
     bat_mass, bat_volume = battery_sizing(m)
-    total_mass = (m.power_req_subsystems / 10          # panel & structure mass
-                  + bat_mass
-                  + 0.071 * m.power_req_subsystems     # brown
-                  + 0.15)                              
 
     print("\n— Mars Solar-Array Quick Sizing —")
     print(f"Configuration               : {m.array_type}")
@@ -125,14 +132,16 @@ def main():
     print(f"Power-system margin (W)     : {m.power_subsystems['Power']:,.2f}")
     print(f"Battery mass (kg)           : {bat_mass:,.2f}")
     print(f"Battery volume (L)          : {bat_volume:,.2f}")
-    print(f"Total mass (kg)             : {total_mass:,.2f}")
+    print(f"Total mass (kg)             : {m.total_mass:,.2f}")
 
     H = "\033[1;36m"   # bold-cyan
     R = "\033[0m"      # reset
     print(f"\n{H}===ITERATION PARAMETERS==={R}")
     print(f"{H}Power-system required power  : {m.power_subsystems['Power']:,.2f} W{R}")
-    print(f"{H}Total power subsystem mass: {total_mass:,.2f} kg{R}")
-    print(f"{H}Solar-array area     : {area:,.2f} m²{R}\n")
+    print(f"{H}Total power subsystem mass: {m.mass_subsystems['Power']:,.2f} kg{R}")
+    print(f"{H}Solar-array area     : {area:,.2f} m²{R}")
+    print(f"{H}Total s/c mass (kg)             : {m.total_mass:,.2f}{R}")
+    print(f"{H}Total s/c power (W)            : {p_eol:,.2f}{R}\n")
 
 if __name__ == "__main__":
     main()
