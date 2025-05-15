@@ -12,8 +12,10 @@ mu_earth = (G * M_earth).to(u.km**3 / u.s**2).value
 mu_mars = (G * M_mars).to(u.km**3 / u.s**2).value
 r_earth = R_earth.to(u.km).value
 r_mars = R_mars.to(u.km).value
-mu_sun = 1.32712440018e11  # km^3/s^2
 
+mu_sun = 1.32712440018e11  # km^3/s^2
+rho_0 = 0.020  # Atmospheric density at the surface of Mars (kg/m³)
+H = 11.1  # Scale height of the Martian atmosphere (km)
 # Mission parameters
 
 
@@ -28,6 +30,15 @@ def compute_transfer_injection(leo_radius, mars_orbit_radius, v_leo):
     v_per_LEO = np.sqrt((2 * mu_earth / leo_radius) + v_inf_leo**2)
     delta_v = np.abs(v_per_LEO - v_leo)
     eccentricity = 1 - ((leo_radius + d_ES) / transfer_a)
+    return delta_v, transfer_a, eccentricity, v_inf_leo
+def compute_dir_tranfer_injection(r_earth, mars_orbit_radius):
+    transfer_a = ((d_MS + d_ES) + mars_orbit_radius)/ 2
+    v_earth_orbit = np.sqrt(mu_sun / d_ES)
+    v_hel_LEO = np.sqrt(mu_sun * (2 / d_ES - 1 / transfer_a))
+    v_inf_leo = v_hel_LEO - v_earth_orbit
+    v_per_LEO = np.sqrt((2 * mu_earth / r_earth) + v_inf_leo**2)
+    delta_v = np.abs(v_per_LEO) 
+    eccentricity = 1 - ((r_earth + d_ES) / transfer_a)
     return delta_v, transfer_a, eccentricity, v_inf_leo
 
 def compute_capture_orbit(mars_orbit_radius):
@@ -46,12 +57,55 @@ def compute_mars_inclination_change(v_orbit):
 def compute_mars_circularization(v_inf_mars, mars_orbit_radius, v_mars_circ):
     v_apo_mars = np.sqrt((2 * mu_mars / mars_orbit_radius) + v_inf_mars**2)
     return np.abs(v_mars_circ - v_apo_mars)
+def compute_mars_period(mars_orbit_radius):
+    T_mars = 2 * np.pi * np.sqrt(((mars_orbit_radius)**3) / mu_mars)
+    return T_mars
 
 def compute_station_keeping(years=4.5, delta_v_per_year=60):
     return delta_v_per_year * years / 1000  # km/s
 
 def compute_deorbit():
     return 60 / 1000  # km/s
+
+
+def compute_atmospheric_drag(mars_altitude, spacecraft_velocity, spacecraft_mass, drag_coefficient, cross_sectional_area, delta_t):
+    """
+    Compute the effect of atmospheric drag at a specified Martian altitude.
+
+    Parameters:
+        mars_altitude (float): Altitude above the Martian surface (km).
+        spacecraft_velocity (float): Velocity of the spacecraft relative to the atmosphere (m/s).
+        spacecraft_mass (float): Mass of the spacecraft (kg).
+        drag_coefficient (float): Drag coefficient (dimensionless).
+        cross_sectional_area (float): Cross-sectional area of the spacecraft (m²).
+
+    Returns:
+        delta_v_drag (float): Velocity change due to atmospheric drag (m/s).
+    """
+    h = mars_altitude * 1000  # Convert km to m
+
+    # Compute atmospheric density at the given altitude
+    # rho = rho_0 * np.exp(-h / (H * 1000))  # Density in kg/m³
+    # T = -23.4-0.00222*h  # Temperature in K
+    # p = 0.699 * np.exp(-0.00009*h)  # Pressure in Pa
+    # rho = p/(0.1921*T)
+    rho = 10**-12
+    print(f"Atmospheric density at {mars_altitude} km: {rho} kg/m³")
+    # Compute drag force
+    drag_force = 0.5 * rho * (spacecraft_velocity*1000)**2 * drag_coefficient * cross_sectional_area  # Force in N
+    print(f"Drag force: {drag_force} N")
+    # Compute deceleration due to drag
+    deceleration = drag_force / spacecraft_mass  # Acceleration in m/s²
+    delta_v_drag = deceleration * delta_t  # Velocity change in m/s
+
+    # Output results
+    # print(f"At altitude {mars_altitude} km:")
+    # print(f"  Atmospheric density: {rho:.6f} kg/m³")
+    # print(f"  Drag force: {drag_force:.3f} N")
+    # print(f"  Deceleration: {deceleration:.6f} m/s²")
+    # print(f"  Δv due to drag: {delta_v_drag:.3f} m/s")
+
+    return delta_v_drag
 
 # # Run all calculations
 # e_mars = 0.8537
@@ -123,16 +177,15 @@ def compute_deorbit():
 # print(f'Total Mission ΔV               = {total_delta_v:.3f} km/s')
 
 
-def main(use_aerobraking=True, inclination_midcourse=False, leo_alt=200, mars_orbit_alt=400):
+def main(use_aerobraking, inclination_midcourse, leo_alt, mars_orbit_alt, spacecraft_mass, Cd, cross_sectional_area, delta_t):
     leo_radius = r_earth + leo_alt
     mars_orbit_radius = r_mars + mars_orbit_alt
     v_leo = np.sqrt(mu_earth / leo_radius)
     v_mars_circ = np.sqrt(mu_mars / mars_orbit_radius)
-    
     # === CALCULATIONS ===
     delta_v_launch = compute_launch_to_leo(leo_radius)
-    delta_v_1, transfer_a, e, v_inf_leo = compute_transfer_injection(leo_radius, mars_orbit_radius, v_leo)
-    
+    #delta_v_1, transfer_a, e, v_inf_leo = compute_transfer_injection(leo_radius, mars_orbit_radius, v_leo)
+    delta_v_1, transfer_a, e, v_inf_leo = compute_dir_tranfer_injection(leo_radius, mars_orbit_radius)
     v_hel_mars = np.sqrt(mu_sun * (2 / d_MS - 1 / transfer_a))
     v_mars_orbit = np.sqrt(mu_sun / d_MS)
     v_inf_mars = v_hel_mars - v_mars_orbit
@@ -142,38 +195,45 @@ def main(use_aerobraking=True, inclination_midcourse=False, leo_alt=200, mars_or
     if not inclination_midcourse and not use_aerobraking:
         delta_v_2 = compute_mars_circularization(v_inf_mars, mars_orbit_radius, v_mars_circ)
         delta_v_inclination = compute_mars_inclination_change(v_mars_circ)
-        print("Aerobraking disabled — full circularization burn required.")
+        delta_v_drag = compute_atmospheric_drag(mars_orbit_radius, v_mars_circ, spacecraft_mass, Cd, cross_sectional_area, delta_t)
+        print("Aerobraking disabled — inclination change at mars circ.")
     elif not inclination_midcourse and use_aerobraking:
-        delta_v_2 = np.abs(v_mars_per - v_mars_circ) + 20/1000
+        delta_v_2 = np.abs(v_mars_per - v_mars_circ)
         delta_v_inclination = compute_mars_inclination_change(v_mars_apo)
-        print("Aerobraking enabled — circularization ΔV saved.")
+        delta_v_drag = compute_atmospheric_drag(mars_orbit_radius, v_mars_per, spacecraft_mass, Cd, cross_sectional_area, delta_t)
+        print("Aerobraking enabled — inclination change at mars apo.")
     elif inclination_midcourse and use_aerobraking:
-        delta_v_2 = np.abs(v_mars_per - v_mars_circ) + 20/1000
+        delta_v_2 = np.abs(v_mars_per - v_mars_circ)
         delta_v_inclination = 20 / 1000  # 20 m/s
-        print("Inclination changed midcourse.")
+        delta_v_drag = compute_atmospheric_drag(mars_orbit_radius, v_mars_per, spacecraft_mass, Cd, cross_sectional_area, delta_t)
+        print("Inclination changed midcourse — aerobraking enabled.")
     else:
         delta_v_2 = compute_mars_circularization(v_inf_mars, mars_orbit_radius, v_mars_circ)
         delta_v_inclination = 20 / 1000
+        delta_v_drag = compute_atmospheric_drag(mars_orbit_radius, v_mars_circ, spacecraft_mass, Cd, cross_sectional_area, delta_t)
+        print("Inclination changed midcourse — aerobraking disabled.")
 
     delta_v_station_keeping = compute_station_keeping(years=4.5, delta_v_per_year=60)
     delta_v_deorbit = compute_deorbit()
 
     total_delta_v_launcher = (
-        delta_v_launch +
+        #delta_v_launch
         delta_v_1
     )
 
-    total_delta_v_spacecraft = (delta_v_inclination + delta_v_2 + delta_v_station_keeping + delta_v_deorbit)
-
+    total_delta_v_spacecraft = (delta_v_inclination + delta_v_2 + delta_v_station_keeping + delta_v_deorbit + delta_v_drag)
+    period = compute_mars_period(mars_orbit_radius)
+    print(f"Period of Mars orbit: {period/60:.2f} minutes")
     # === OUTPUT ===
     print(f"\nEccentricity of transfer orbit: {e:.4f}")
     print("=== Mars Mission ΔV Budget ===")
-    print(f"ΔV: Launch to LEO              = {delta_v_launch:.3f} km/s")
-    print(f"ΔV: LEO to Mars Transfer       = {delta_v_1:.3f} km/s")
+    #print(f"ΔV: Launch to LEO              = {delta_v_launch:.3f} km/s")
+    print(f"ΔV: Mars Transfer Injection      = {delta_v_1:.3f} km/s")
     print(f"ΔV: Inclination Change         = {delta_v_inclination:.3f} km/s")
-    print(f"ΔV: Mars Circularization       = {delta_v_2:.3f} km/s")
+    print(f"ΔV: Mars Capture & Circularization       = {delta_v_2:.3f} km/s")
     print(f"ΔV: Station Keeping (4.5 yrs)  = {delta_v_station_keeping:.3f} km/s")
     print(f"ΔV: End-of-Life Deorbit        = {delta_v_deorbit:.3f} km/s")
+    print(f"ΔV: Atmospheric Drag           = {delta_v_drag/1000:.3f} km/s")
     print("------------------------------------------")
     print(f"Total Mission ΔV (launcher)    = {total_delta_v_launcher:.3f} km/s")
     print(f"Total Mission ΔV (spacecraft)  = {total_delta_v_spacecraft:.3f} km/s")
@@ -210,7 +270,8 @@ def simulate_and_plot():
                 v_mars_circ = np.sqrt(mu_mars / mars_orbit_radius)
 
                 delta_v_launch = compute_launch_to_leo(leo_radius)
-                delta_v_1, transfer_a, e, v_inf_leo = compute_transfer_injection(leo_radius, mars_orbit_radius, v_leo)
+                #delta_v_1, transfer_a, e, v_inf_leo = compute_transfer_injection(leo_radius, mars_orbit_radius, v_leo)
+                delta_v_1, transfer_a, e, v_inf_leo = compute_dir_tranfer_injection(leo_radius, mars_orbit_radius)
 
                 v_hel_mars = np.sqrt(mu_sun * (2 / d_MS - 1 / transfer_a))
                 v_mars_orbit = np.sqrt(mu_sun / d_MS)
@@ -291,8 +352,8 @@ def simulate_and_plot2():
                 v_mars_circ = np.sqrt(mu_mars / mars_orbit_radius)
 
                 delta_v_launch = compute_launch_to_leo(leo_radius)
-                delta_v_1, transfer_a, e, v_inf_leo = compute_transfer_injection(leo_radius, mars_orbit_radius, v_leo)
-
+                #delta_v_1, transfer_a, e, v_inf_leo = compute_transfer_injection(leo_radius, mars_orbit_radius, v_leo)
+                delta_v_1, transfer_a, e, v_inf_leo = compute_dir_tranfer_injection(leo_radius, mars_orbit_radius)
                 v_hel_mars = np.sqrt(mu_sun * (2 / d_MS - 1 / transfer_a))
                 v_mars_orbit = np.sqrt(mu_sun / d_MS)
                 v_inf_mars = v_hel_mars - v_mars_orbit
@@ -305,7 +366,7 @@ def simulate_and_plot2():
                 elif not scenario_params["inclination_midcourse"] and scenario_params["use_aerobraking"]:
                     delta_v_2 = np.abs(v_mars_per - v_mars_circ)
                     delta_v_inclination = compute_mars_inclination_change(v_mars_apo)
-                elif scenario_params["inclination_midcourse"]:
+                elif scenario_params["inclination_midcourse"] and not scenario_params["use_aerobraking"]:
                     delta_v_2 = compute_mars_circularization(v_inf_mars, mars_orbit_radius, v_mars_circ)
                     delta_v_inclination = 20 / 1000  # 20 m/s
                 else:
@@ -369,8 +430,13 @@ def simulate_and_plot2():
 # Run the simulation and plot
 
 
-
 if __name__ == "__main__":
-    main(use_aerobraking=True, inclination_midcourse=True, leo_alt=200, mars_orbit_alt=300)
+    main(use_aerobraking=True, inclination_midcourse= True, leo_alt=200, mars_orbit_alt = 200, spacecraft_mass = 850, Cd = 2.6, cross_sectional_area = 7, delta_t = 3.8*365*24*3600)
+    main(use_aerobraking=False, inclination_midcourse= False, leo_alt=200, mars_orbit_alt = 200, spacecraft_mass = 850, Cd = 2.6, cross_sectional_area = 7, delta_t = 3.8*365*24*3600)
+    main(use_aerobraking=True, inclination_midcourse= False, leo_alt=200, mars_orbit_alt = 200, spacecraft_mass = 850, Cd = 2.6, cross_sectional_area = 7, delta_t = 3.8*365*24*3600)
+    main(use_aerobraking=False, inclination_midcourse= True, leo_alt=200, mars_orbit_alt = 200, spacecraft_mass = 850, Cd = 2.6, cross_sectional_area = 7, delta_t = 3.8*365*24*3600)
+    period = compute_mars_period(200+r_mars)
+    print(f"Period of Mars orbit: {period/60:.2f} minutes")
     #simulate_and_plot()
     #simulate_and_plot2()
+
