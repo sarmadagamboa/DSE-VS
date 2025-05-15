@@ -140,7 +140,7 @@ class Load_calculation:
         self.mass = sc_mass
 
         
-    def launcher_loading(self): #####INCOMPLETE
+    def launcher_loading(self):
         fnat_ax = 20
         fnat_lat = 6
         maxg_ax = 6
@@ -150,6 +150,8 @@ class Load_calculation:
         p_lat =  maxg_lat * self.mass * 9.81
 
         p_eq = (p_ax + 2*(p_lat*self.geometry.height/2)/1.414) *1.25 #will be checked against both buckling and yield/ultimate strength
+        ## 1.414 value above must be switched to half of the longest diagonal of the polygon
+        
         #print(p_ax,p_lat,(p_lat*l/2),p_eq/1.25,p_eq)
         self.load = p_eq
 
@@ -224,7 +226,6 @@ class Load_calculation:
         print(f"Weight: {self.weight}")
 
         return self.weight
-
 
 
 
