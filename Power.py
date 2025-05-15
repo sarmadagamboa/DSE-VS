@@ -105,12 +105,14 @@ def battery_sizing(m: Mission):
     """
     m = Mission()
     power_eol = m.power_req_eol * (1 + m.power_margin)
+    print(f'this is {power_eol}')
     DOD = 0.85
     efficiency_loss = 0.85
-    E_bat = power_eol * m.eclipse/3600 / (DOD * efficiency_loss)
+    E_bat = power_eol * (m.eclipse/3600) / (DOD * efficiency_loss)
+    print(E_bat)
     # Battery mass
     specific_power = 300  # W/kg, power book Li-ion
-    energy_density = 450  # Wh/L, power book, Li-ion
+    energy_density = 400  # Wh/L, power book, Li-ion
     bat_mass = E_bat / specific_power
     bat_volume = E_bat / energy_density
     return bat_mass, bat_volume
