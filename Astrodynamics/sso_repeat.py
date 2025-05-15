@@ -15,8 +15,6 @@ def repeat_sso(martian_sols, tol=1e-6, max_iter=100, period_bounds_hr=(1.5, 3.0)
     lower_Q = int(np.floor((martian_sols * P_sol) / (period_bounds_hr[1] * 3600)))
     upper_Q = int(np.ceil((martian_sols * P_sol) / (period_bounds_hr[0] * 3600)))
 
-    a = R_M + 100                   # guess initial value of a
-
     for Q in range(lower_Q, upper_Q + 1):
 
         P_omega_true = martian_sols * P_sol / Q
