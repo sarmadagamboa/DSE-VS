@@ -2,21 +2,22 @@ import numpy as np
 
 data = {
     "Designs":         ["LRI-ACC", "LRI-CAI", "QGG", "DT"],
-    "Dry_mass":        [529, 656, 665, 440],       # in kg (lower is better)
-    "Power":           [763, 991, 1128, 614],      # in W (lower is better)
-    "Cost":            [561, 668.5, 474, 409],     # in k€ (lower is better)
-    "Science":         [255, 280, 160, 140],       # D/O (higher is better)
-    "Sustainability":  [3.5, 2, 2, 2.5],           # (higher is better)
-    "Risk":            [0.03, 0.04, 0.06, 0.03],   # failure prob (lower is better)
+    "Dry_mass":        [529, 656, 665, 440],                 # in kg (lower is better)
+    "Power":           [763, 991, 1128, 614],                # in W (lower is better)
+    "Cost":            [561.49, 668.57, 455.25, 362.85],     # in M€ (lower is better)
+    "D/O":             [255, 280, 160, 140],                 # D/O (higher is better)
+    "Error":           [1e15, 1e17, 1e10, 1e12],             # errer inversed (higher is better)
+    "Sustainability":  [3.5, 2, 2, 2.5],                     # (higher is better)
+    "Risk":            [0.03, 0.04, 0.06, 0.03],             # failure prob (lower is better)
 }
 
-
-# Weights for each criterion 
+# Weights for each criterion (must sum to 1.0)
 weights = {
     "Dry_mass":       1.0,
     "Power":          1.0,
     "Cost":           4.0,
-    "Science":        7.0,
+    "D/O":            4.0,
+    "Error":          3.0,
     "Sustainability": 2.0,
     "Risk":           3.0,
 }
@@ -26,7 +27,8 @@ higher_better = {
     "Dry_mass":       False,
     "Power":          False,
     "Cost":           False,
-    "Science":        True,   # <-- treat Science as higher is better
+    "D/O":            True,   
+    "Error":          True,  
     "Sustainability": True,
     "Risk":           False,
 }
@@ -35,15 +37,11 @@ def normalize_minmax(values, scale=5, higher_is_better=False):
     """
     Min–max normalize a 1D array to the range [0, scale].
     
-    If higher_is_better:
-        score = scale * (arr - min) / (max - min)
-    else:
-        score = scale * (max - arr) / (max - min)
     """
     arr = np.array(values, dtype=float)
     mn, mx = arr.min(), arr.max()
     if mx == mn:
-        return np.full_like(arr, scale/2)  # all the same -> mid score
+        return np.full_like(arr, scale / 2)  # all identical → mid score
     if higher_is_better:
         return scale * arr / mx
     else:
