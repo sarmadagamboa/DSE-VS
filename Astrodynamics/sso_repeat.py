@@ -55,10 +55,11 @@ def repeat_sso(sol_range=(5, 30), tol=1e-6, max_iter=100, period_bounds_hr=(1.5,
 
     df = pd.DataFrame(results)
 
+    df['Inclination_deg'] = df['Inclination_deg'].round(4)
+    df['Altitude_km'] = df['Altitude_km'].round(4)
     df['Group_ID'] = df.groupby(['Inclination_deg', 'Altitude_km']).ngroup()
 
-    unique_orbits_df = df.sort_values(['Martian_Sols', 'Altitude_km']).drop_duplicates(subset='Group_ID', keep='first')
-    unique_orbits_df.reset_index(drop=True, inplace=True)
+    unique_orbits_df = df.sort_values(['Martian_Sols', 'Altitude_km']).drop_duplicates(subset=['Inclination_deg', 'Altitude_km'], keep='first').reset_index(drop=True)
     unique_orbits_df.head()
 
     print(unique_orbits_df.to_string(index=False))
