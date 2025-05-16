@@ -80,7 +80,7 @@ print("Lateral moment of inertia needed: ", I_lateral)
 t_axial = A_axial / (2 * np.pi * r)
 
 # skin thickness based on bending-inertia requirement
-t_bending = 
+t_bending = 0
 
 print(f"Thickness from axial requirement: {t_axial} m")
 print(f"Thickness from bending requirement: {t_bending} m")
