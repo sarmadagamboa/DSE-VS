@@ -5,10 +5,10 @@ data = {
     "Dry_mass":        [529, 656, 665, 440],                 # in kg (lower is better)
     "Power":           [763, 991, 1128, 614],                # in W (lower is better)
     "Cost":            [561.49, 668.57, 455.25, 362.85],     # in M€ (lower is better)
-    "D/O":             [255, 280, 160, 140],                 # D/O (higher is better)
+    "D/O":             [135, 160, 40, 20],                 # D/O (higher is better)
     "Error":           [1e15, 1e17, 1e10, 1e12],             # errer inversed (higher is better)
     "Sustainability":  [3.5, 2, 2, 2.5],                     # (higher is better)
-    "Risk":            [0.03, 0.04, 0.06, 0.03],             # failure prob (lower is better)
+    "Risk":            [0.6, 1, 0.6, 0.2],                   # (lower is better)
 }
 
 # Weights for each criterion (must sum to 1.0)
