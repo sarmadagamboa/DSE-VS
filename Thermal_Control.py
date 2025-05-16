@@ -48,10 +48,11 @@ T_HOT = 30.0 # min(T_HOT_LIST) # Hot-case temperature [°C]
 
 # ─── Payload heater ────────────────────────────────────────────────────────
 # Patch heaters with solid-state thermostat have accuracy of less than 0.1 C 
-A_CAI = 0.5 * 0.5 * 2 +0.5 * 1.0 * 4              # CAI area [m²]
+A_CAI = 0.52 * 0.52 * 6                           # CAI area [m²]
 A_ACC = 0.26 * 0.26 * 6                           # ACC area [m²]
 A_LRI = 0.40 * 0.40 * 2 + 0.40 * 0.20 * 4         # LRI area [m²]
-A_PAYLOAD = A_CAI + A_LRI                         # Payload area [m²]
+A_QGG = 0.5 * 0.5 * 2 + 0.5 * 1  * 4              # QGG area [m²]     
+A_PAYLOAD = A_ACC                         # Payload area [m²]
 U = 2.5                                           # Heater power [W/m²]
 T_PAYLOAD_AVG = (T_PAYLOAD[0] + T_PAYLOAD[1]) / 2 # Average payload temperature [°C]
 
@@ -65,7 +66,7 @@ NU = H_ORBIT / R_MARS  # Dimensionless altitude ratio (a/R)
 w = 3.0                # Satellite width [m]
 l = 3.0                # Satellite length [m]
 h = 2.0                # Satellite height [m]
-Q_DISS = 1250.0        # Internal dissipation [W]
+Q_DISS = 598.0         # Internal dissipation [W]
 T_MARS = 209.8         # Mars effective temperature [K]
 S_MARS = 586.2         # Solar constant at Mars [W/m²]
 ALBEDO_MARS = 0.25     # Mars Bond albedo
@@ -216,8 +217,6 @@ def main():
     print("Subsystems requiring heating:")
     for name, t_min in subsys_above:
         print(f" - {name}: {t_min:.1f} °C > {T_cold:.2f} °C")
-
-
 
 if __name__ == "__main__":
     main()
