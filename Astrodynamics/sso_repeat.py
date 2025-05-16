@@ -37,7 +37,7 @@ def repeat_sso(sol_range=(5, 30), tol=1e-6, max_iter=100, period_bounds_hr=(1.5,
 
                 error = P_omega - P_omega_true
 
-                if abs(error) < tol and (100 < a - R_M < 400) and (30 % martian_sols == 0):
+                if abs(error) < tol and (200 < a - R_M < 350) and (30 % martian_sols == 0):
                     results.append({
                         'Martian_Sols': martian_sols,
                         'Q': Q,
