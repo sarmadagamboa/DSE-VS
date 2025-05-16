@@ -4,7 +4,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 class Material:
-    def __init__(self, E, rho, s_yld, s_ult, alpha=0.8, n=0.6, nu=0.33):
+    def __init__(self, E, rho, s_yld, s_ult, alpha=0.8, n=0.6, nu=0.334):
         '''Initializes the Material class
         INPUTS:
             E: FLOAT -> Young's modulus in Pa
@@ -61,12 +61,12 @@ class Polygon:
             self.elements.append(length)
 
 class Cylinder:
-    '''Initializes the Polygon class
+    '''Initializes the Cylinder class
         INPUTS:
             height: FLOAT -> height of the cylinder
             radius: FLOAT -> radius of the cylinder
             stringers: FLOAT -> number of stringers on the cylinder
-            thickness: FLOAT -> thickness of the polygon skin
+            thickness: FLOAT -> thickness of the cylinder skin
 
         OUTPUTS:
             None
@@ -124,7 +124,7 @@ class Stringer:
 
 
 class Load_calculation:
-    def __init__(self, geometry, stringer, material):
+    def __init__(self, geometry, stringer, material, sc_mass):
         '''Initializes the Load_calculation class
         INPUTS:
             geometry: OBJECT -> geometry of the structure
@@ -137,25 +137,30 @@ class Load_calculation:
         self.geometry = geometry
         self.stringer = stringer
         self.material = material
+        self.mass = sc_mass
 
         
-    def launcher_loading(self): #####INCOMPLETE
+    def launcher_loading(self):
         fnat_ax = 20
         fnat_lat = 6
         maxg_ax = 6
         maxg_lat = 2
 
-        p_ax = maxg_ax  * m * 9.81
-        p_lat =  maxg_lat * m * 9.81
+        p_ax = maxg_ax  * self.mass * 9.81
+        p_lat =  maxg_lat * self.mass * 9.81
 
-        p_eq = (p_ax + 2*(p_lat*l/2)/r) *1.25 #will be checked against both buckling and yield/ultimate strength
+        p_eq = (p_ax + 2*(p_lat*self.geometry.height/2)/1.414) *1.25 #will be checked against both buckling and yield/ultimate strength
+        ## 1.414 value above must be switched to half of the longest diagonal of the polygon
+        
         #print(p_ax,p_lat,(p_lat*l/2),p_eq/1.25,p_eq)
         self.load = p_eq
+
+        return self.load
 
     def calculate_loads(self):
         if isinstance(self.geometry, Polygon):
             # Calculate loads for polygon
-            self.calculate_poly_loads()
+            return self.calculate_poly_loads()
         elif isinstance(self.geometry, Cylinder):
             # Calculate loads for cylinder
             pass
@@ -163,50 +168,64 @@ class Load_calculation:
             raise ValueError("Invalid geometry type")
     
     def calculate_poly_loads(self):
-            self.w_e = (self.geometry.t/2) * math.sqrt((4.0 * math.pi**2)/(12.0 * (1 - self.material.nu**2))) * math.sqrt(self.material.E/self.stringer.crip_stress)
+        self.w_e = (self.geometry.t/2) * math.sqrt((4.0 * math.pi**2)/(12.0 * (1 - self.material.nu**2))) * math.sqrt(self.material.E/self.stringer.crip_stress)
             
-            print(f"w_e: {self.w_e}")
+        print(f"w_e: {self.w_e}")
 
-            for i in range(len(self.geometry.elements)):
-                if self.geometry.elements[i] < 2* self.w_e * (self.geometry.stringers[i]):
-                    print(f"Element {i} has too many stringers")
+        for i in range(len(self.geometry.elements)):
+            for n in range(len(self.geometry.t)):
+                if self.geometry.elements[i] < 2 * self.w_e[n] * (self.geometry.stringers[i]):
+                    print(f"Element {i} has too many stringers for thickness {self.geometry.t[n]}")
             
-            self.element_empty_length = []
-            for i in range(len(self.geometry.elements)):
-                self.element_empty_length.append((self.geometry.elements[i] - 2 * self.w_e * (self.geometry.stringers[i]))/(self.geometry.stringers[i]+1))
-                if self.element_empty_length[i] < 0:
-                    self.element_empty_length[i] = 0
+        self.element_empty_length = []
+        for i in range(len(self.geometry.elements)):
+            self.element_empty_length.append((self.geometry.elements[i] - 2 * self.w_e * (self.geometry.stringers[i]))/(self.geometry.stringers[i]+1))
+            for n in range(len(self.geometry.t)):
+                if self.element_empty_length[i][n] < 0:
+                    self.element_empty_length[i][n] = 0
 
-            self.element_empty_stress = []
-            for i in range(len(self.geometry.elements)):
-                self.element_empty_stress.append(4.0 * ((math.pi**2) / (12.0 * (1 - self.material.nu**2))) * (self.geometry.t / self.element_empty_length[i])**2)
+        self.element_empty_stress = []
+        for i in range(len(self.geometry.elements)):
+            self.element_empty_stress.append(4.0 * ((math.pi**2*self.material.E) / (12.0 * (1 - self.material.nu**2))) * (self.geometry.t / self.element_empty_length[i])**2)
 
             
-            self.element_crippling_stress = []
-            self.element_area = []
+        self.element_crippling_stress = []
+        self.element_area = []
             
-            for i in range(len(self.geometry.elements)):
-                empty_area = self.element_empty_length[i] * (self.geometry.stringers[i]+1) * self.geometry.t
-                empty_stress = self.element_empty_stress[i]
-                stringered_area = self.geometry.elements[i] * self.geometry.t - empty_area
-                stringer_area = self.stringer.area
-                stringer_stress = self.stringer.crip_stress
-                self.element_crippling_stress.append((empty_area * empty_stress + (stringered_area + stringer_area) * stringer_stress)/(empty_area + stringered_area + stringer_area))
-                self.element_area.append(empty_area + stringered_area + stringer_area)
+        for i in range(len(self.geometry.elements)):
+            empty_area = self.element_empty_length[i] * (self.geometry.stringers[i]+1) * self.geometry.t
+            empty_stress = self.element_empty_stress[i]
+            stringered_area = self.geometry.elements[i] * self.geometry.t - empty_area
+            stringer_area = self.stringer.area * self.geometry.stringers[i]
+            stringer_stress = self.stringer.crip_stress
+            self.element_crippling_stress.append((empty_area * empty_stress + (stringered_area + stringer_area) * stringer_stress)/(empty_area + stringered_area + stringer_area))
+            self.element_area.append(empty_area + stringered_area + stringer_area)
                 
-            self.total_load_bearing = 0
-            self.total_area = 0
-            for i in range(len(self.geometry.elements)):
-                self.total_load_bearing += self.element_crippling_stress[i] * self.element_area[i]
-                self.total_area += self.element_area[i]
-            self.total_stress = self.total_load_bearing / self.total_area
+        self.total_load_bearing = 0
+        self.total_area = 0
+        for i in range(len(self.geometry.elements)):
+            self.total_load_bearing += self.element_crippling_stress[i] * self.element_area[i]
+            self.total_area += self.element_area[i]
+        self.total_stress = self.total_load_bearing / self.total_area
 
-            print(f"Total load bearing: {self.total_load_bearing}")
-            print(f"Total area: {self.total_area}")
-            print(f"Total stress: {self.total_stress}")
+        #print(f"Total load bearing: {self.total_load_bearing}")
+        #print(f"Total area: {self.total_area}")
+        #print(f"Total stress: {self.total_stress}")
+        print(self.total_load_bearing)
+        return self.total_load_bearing
 
+    def calculate_weight(self):
+        '''Calculates the weight of the structure
+        INPUTS:
+            None
+        OUTPUTS:
+            None
+        '''
+        self.weight = self.total_area * self.material.rho
 
-            
+        print(f"Weight: {self.weight}")
+
+        return self.weight
 
 
 
@@ -214,15 +233,46 @@ class Load_calculation:
 if __name__ == "__main__":
     points = [0, 1, 2, 3]
     x = [0, 2, 2, 0]
-    y = [0, 0, 1, 1]
+    y = [0, 0, 2, 2]
 
-    stringers = [2, 2, 2, 2]
-    print(stringers)
-    aluminium = Material(70e9, 2800, 448e6, 524e6) #based on aluminium 7075
-    box = Polygon(1.2, points, x, y, stringers, 0.001)
-    hat_stringer = Stringer('hat', 0.001, [0.01, 0.01, 0.01], aluminium)
-
-    load_calc = Load_calculation(box, hat_stringer, aluminium)
+    stringers = [0, 0, 0, 0] #number of stringers per element
+    #print(stringers)
+    t = np.linspace(0.0001, 0.006, 50)
+    #print(t)
+    aluminium = Material(E=70e9, rho=2800, s_yld=448e6, s_ult=524e6) #based on aluminium 7075
+    hat_stringer = Stringer(type='hat', thickness=0.0005, lengths=[0.01, 0.01, 0.01], material=aluminium)
+    box = Polygon(height=1.2, points=points, px=x, py=y, stringers=stringers, thickness=t)
+    load_calc = Load_calculation(geometry=box, stringer=hat_stringer, material=aluminium, sc_mass=691)
 
     #load_calc.launcher_loading()
-    load_calc.calculate_loads()
+    launchload = load_calc.launcher_loading()
+    loadbearing = load_calc.calculate_loads()
+    weight = load_calc.calculate_weight()
+
+    print(f"Launch load: {launchload}")
+    print(f"Load bearing: {loadbearing}")
+    print(f"Weight: {weight}")
+
+
+    # Plot setup
+    fig, ax1 = plt.subplots()
+
+    # Plot load bearing on the left y-axis
+    ax1.plot(t, loadbearing, 'b-', label='Load Bearing')
+    ax1.set_xlabel('Thickness (t)')
+    ax1.set_ylabel('Load Bearing (N)', color='b')
+    ax1.tick_params(axis='y', labelcolor='b')
+
+    ax1.axhline(y=launchload, color='g', linestyle='--', label=f'Limit: {launchload} N')
+
+    # Create a second y-axis for mass
+    ax2 = ax1.twinx()
+    ax2.plot(t, weight, 'r-', label='Mass')
+    ax2.set_ylabel('Mass (kg)', color='r')
+    ax2.tick_params(axis='y', labelcolor='r')
+
+    # Add legends and grid
+    fig.tight_layout()
+    plt.title('Load Bearing and Mass vs. Thickness')
+    plt.grid(True)
+    plt.show()
