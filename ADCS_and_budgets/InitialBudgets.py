@@ -55,7 +55,7 @@ n = len(y)
 p = 1  # number of predictors
 RSE = np.sqrt(RSS / (n - p - 1))
 RSE_percent = (RSE / np.mean(y)) * 100
-print(f"RSE (% of mean y): {RSE_percent:.2f}%")
+# print(f"RSE (% of mean y): {RSE_percent:.2f}%")
 
 # Output
 # print(f"R² Payload Mass vs Dry Mass: {r2:.4f}")
@@ -81,8 +81,8 @@ print(f"RSE (% of mean y): {RSE_percent:.2f}%")
 # Combine Dry and payload mass into a single list for each category
 Payload_Power = MClass_PP + Mars_PP2
 Total_Power = MClass_TP + Mars_TP2
-print(Payload_Power)
-print(Total_Power)
+# print(Payload_Power)
+# print(Total_Power)
 X = np.array(Payload_Power).reshape(-1, 1)  # Reshape for sklearn
 y = np.array(Total_Power).reshape(-1, 1)  # Reshape for sklearn
 
@@ -103,7 +103,7 @@ n = len(y)
 p = 1  # number of predictors
 RSE = np.sqrt(RSS / (n - p - 1))
 RSE_percent = (RSE / np.mean(y)) * 100
-print(f"RSE (% of mean y) for Power: {RSE_percent:.2f}%")
+# print(f"RSE (% of mean y) for Power: {RSE_percent:.2f}%")
 
 # Output
 # print(f"R² Payload Power vs Total Power: {r2:.4f}")
@@ -149,7 +149,7 @@ n = len(y)
 p = 1  # number of predictors
 RSE = np.sqrt(RSS / (n - p - 1))
 RSE_percent = (RSE / np.mean(y)) * 100
-print(f"RSE (% of mean y) for Cost: {RSE_percent:.2f}%")
+# print(f"RSE (% of mean y) for Cost: {RSE_percent:.2f}%")
 
 Cost_coef = model.coef_[0][0]
 Cost_intercept = model.intercept_[0]
