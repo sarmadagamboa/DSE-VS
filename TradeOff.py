@@ -7,7 +7,7 @@ data = {
     "Cost":            [561.49, 668.57, 455.25, 362.85],     # in M€ (lower is better)
     "D/O":             [135, 160, 40, 20],                 # D/O (higher is better)
     "Error":           [1e15, 1e17, 1e10, 1e12],             # errer inversed (higher is better)
-    "Sustainability":  [3.5, 2, 2, 2.5],                     # (higher is better)
+    "Sustainability":  [3, 1.5, 1.5, 4],                     # (higher is better)
     "Risk":            [0.6, 1, 0.6, 0.2],                   # (lower is better)
 }
 
