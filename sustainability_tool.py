@@ -7,8 +7,8 @@ def calculate_sustainability():
     Wh_l = 337                          # LiCoO2
     PV_CO2 = 412.9                      # kg CO2-eq / m2 arrays
     Xe_CO2 = 28.92                      # kg CO2-eq / kg Xe
-    MMH_N2O4_CO2 = 0.96                 # kg CO2-eq / kg MMH (with N2O4)
-    MMH_CO2 = 4.13*(10**3)*0.13         # kg CO2-eq / kg MMH  
+    MMH_N2O4_CO2 = 70                   # kg CO2-eq / kg MMH (with N2O4)
+    MMH_CO2 = 50                        # kg CO2-eq / kg MMH  
     
     battery_sizes = np.array([0.0025, 0.0027, 0.003, 0.001]) # m^3, concept 1, 2, 3, 4
     battery_sizes *= 1000               # liters

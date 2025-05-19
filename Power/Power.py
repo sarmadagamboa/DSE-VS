@@ -7,21 +7,21 @@ class Mission:
 
     # Sub‑system loads (W)
     power_subsystems = {
-        "ADCS":       182,
+        "ADCS":       212,
         "Structures":   0,
         "TT&C":       195,
         "CDHS":        20,
-        "Power":        99,  # overwritten a few lines below
-        "Thermal":     10,
-        "Propulsion":   0,
-        "Payload":     8,
+        "Power":        0,  # overwritten a few lines below
+        "Thermal":     55,
+        "Propulsion":   21,
+        "Payload":     194,
     }
     mass_subsystems = {
         "ADCS":       62,
         "Structures":  149.7,
         "TT&C":       40,
         "CDHS":        10,
-        "Power":       0,  # overwritten a few lines below
+        "Power":       0,
         "Thermal":     29,
         "Propulsion":   56,
         "Payload":     32,
@@ -29,12 +29,11 @@ class Mission:
 
     # power subsystem mass and power estimations based on literature
     power_req_subsystems: float = sum(power_subsystems.values())  # W
-    power_subsystems["Power"] = 0.2 * power_req_subsystems       # 15 % margin for the power system itself
+    power_subsystems["Power"] = 0.2 * power_req_subsystems       # 15margin for the power system itself
 
     # Power requirements
     power_req_eol: float = sum(power_subsystems.values())          # W at end‑of‑life
-    power_margin: float = 0.0  # 10 % system margin 
-    power_req_eol = 598                             #
+    power_margin: float = 0.0  #system margin                         
 
 
     # Orbit geometry
@@ -62,7 +61,7 @@ class Mission:
     cell_degradation: float = 0.99 # annual degradation factor
 
     # Array configuration: 0 = body‑fixed, 1 = rotating / sun‑tracking
-    array_type: int = 1
+    array_type: int = 0
 
 def kelly_cos(theta_deg):
     """Kelly cosine approximation for body fixed panels (>60 deg)."""
@@ -101,13 +100,10 @@ def solar_array_sizing(m: Mission):
 def battery_sizing(m: Mission):
     """Compute battery parameters.
     """
-    m = Mission()
     power_eol = m.power_req_eol * (1 + m.power_margin)
-    print(f'this is {power_eol}')
     DOD = 0.85
     efficiency_loss = 0.85
     E_bat = power_eol * (m.eclipse/3600) / (DOD * efficiency_loss)
-    print(E_bat)
     # Battery mass
     specific_power = 300  # W/kg, power book Li-ion
     energy_density = 400  # Wh/L, power book, Li-ion
