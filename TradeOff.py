@@ -5,36 +5,36 @@ from beautifultable import BeautifulTable
 
 
 data = {
-    "Designs":         ["LRI-ACC", "LRI-CAI", "QGG", "DT"],
-    "Dry_mass":        [529, 656, 665, 440],                 # in kg (lower is better)
-    "Power":           [763, 991, 1128, 614],                # in W (lower is better)
-    "Cost":            [551.2, 632.3, 431.5, 358.4],     # in M€ (lower is better)
-    "D/O":             [135, 160, 40, 20],                   # D/O (higher is better)
-    "Error":           [2, 4, 0, 0],             # error inversed (higher is better)(orders of magnitude above 1e13)
-    "Sustainability":  [3.5, 2, 2, 2.5],                     # (higher is better)
-    "Risk":            [0.6, 1, 0.6, 0.2],                   # (lower is better)
+    "Designs":                  ["LRI-ACC", "LRI-CAI", "QGG", "DT"],
+    "Dry_mass":                 [529, 656, 665, 440],                 # in kg (lower is better)
+    "Power":                    [763, 991, 1128, 614],                # in W (lower is better)
+    "Cost":                     [527.8, 645.0, 417.1, 317.9],     # in M€ (lower is better)
+    "D/O":                      [115, 160, 40, 20],                   # D/O (higher is better) 
+    "Temporal sensitivity":     [5, 7, 0, 2],             # error inversed (higher is better)(10+)
+    "Sustainability":           [2.2, 1, 2.8, 4],                     # (higher is better)
+    "Risk":                     [0.8, 1, 0.6, 0.2],                   # (lower is better)
 }
 
 # Specify which metrics are higher-is-better
 higher_better = {
-    "Dry_mass":       False,
-    "Power":          False,
-    "Cost":           False,
-    "D/O":            True,   
-    "Error":          True,  
-    "Sustainability": True,
-    "Risk":           False,
+    "Dry_mass":               False,
+    "Power":                  False,
+    "Cost":                   False,
+    "D/O":                    True,   
+    "Temporal sensitivity":   True,  
+    "Sustainability":         True,
+    "Risk":                   False,
 }
 
 # Weights for each criterion 
 weights = {
-    "Dry_mass":       1.0,
-    "Power":          1.0,
-    "Cost":           3.0,
-    "D/O":            5.0,
-    "Error":          5.0,
-    "Sustainability": 2.0,
-    "Risk":           3.0,
+    "Dry_mass":               1.0,
+    "Power":                  1.0,
+    "Cost":                   3.0,
+    "D/O":                    5.0,
+    "Temporal sensitivity":   5.0,
+    "Sustainability":         2.0,
+    "Risk":                   3.0,
 }
 
 
@@ -55,13 +55,16 @@ def sensitivity_noise(data, weights, data_sensitivity=False, weight_sensitivity=
     return data, weights
 
 
-
 def sensitivity_range(weights):
+    minus = 1.1
+    plus = 1.1
+    step = 0.05
     
     sens_weights = {}
     for key in weights:
-        sens_weights[key] = np.arange(weights[key]-5, weights[key]+5, 0.1)
-    return sens_weights
+        sens_weights[key] = np.arange(weights[key]-minus, weights[key]+plus, step)
+    sens_weights_xist = np.arange(-minus, plus, step)
+    return sens_weights, sens_weights_xist
 
 
 def normalize_data(weights, data, higher_is_better, scale=5):
@@ -134,6 +137,7 @@ def compute_weighted_scores_sensitivity(norm_data, weights, sens_weights):
 
     return scores
 
+
 def print_results(score, norm_data, weights):
     headers = [" ", "Weights", " "]
     for i in range(len(norm_data["Designs"])):
@@ -160,32 +164,29 @@ def print_results(score, norm_data, weights):
     print(table)
 
 
-def print_sensitivity(scores, sens_weights, data):
+def print_sensitivity(scores, sens_weights, data, sens_axis):
     for key in scores:
-        plt.plot(sens_weights[key], scores[key][0],label=data["Designs"][0])
-        plt.plot(sens_weights[key], scores[key][1],label=data["Designs"][1])
-        plt.plot(sens_weights[key], scores[key][2],label=data["Designs"][2])
-        plt.plot(sens_weights[key], scores[key][3],label=data["Designs"][3])
-        plt.axvline(x=weights[key], color='r', linestyle='--', label="Original Weight")
+        plt.plot(sens_axis, scores[key][0],label=data["Designs"][0])
+        plt.plot(sens_axis, scores[key][1],label=data["Designs"][1])
+        plt.plot(sens_axis, scores[key][2],label=data["Designs"][2])
+        plt.plot(sens_axis, scores[key][3],label=data["Designs"][3])
+        plt.axvline(0, color='r', linestyle='--', label="Original Weight")
         plt.title(key)
-        plt.xlabel("Weight")
+        plt.xlabel("Weight difference")
         plt.ylabel("Score")
         plt.legend()
         plt.show()
 
 
 
-
-
 if __name__ == "__main__":
     sensitivity = False
-    #data, weights = sensitivity_noise(data, weights, data_sensitivity=True, weight_sensitivity=True)
 
-    if sensitivity == True:
-        sens_weights = sensitivity_range(weights)
+    if sensitivity:
+        sens_weights, sens_axis = sensitivity_range(weights)
         norm_data = normalize_data(sens_weights, data, higher_better, scale=5)
         scores = compute_weighted_scores_sensitivity(norm_data, weights, sens_weights)
-        print_sensitivity(scores, sens_weights, data)
+        print_sensitivity(scores, sens_weights, data, sens_axis)
         
     else:
         norm_data = normalize_data(weights, data, higher_better, scale=5)
