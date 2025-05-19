@@ -10,18 +10,18 @@ def calculate_sustainability():
     MMH_N2O4_CO2 = 70                   # kg CO2-eq / kg MMH (with N2O4)
     MMH_CO2 = 50                        # kg CO2-eq / kg MMH  
     
-    battery_sizes = np.array([0.0025, 0.0027, 0.003, 0.001]) # m^3, concept 1, 2, 3, 4
+    battery_sizes = np.array([0.0025*2, 0.0027*2, 0.003, 0.001]) # m^3, concept 1, 2, 3, 4
     battery_sizes *= 1000               # liters
     battery_Wh = battery_sizes * Wh_l
     battery_mass = battery_Wh / Wh_kg
     battery_CO2 = battery_mass * Li_ion_CO2
 
-    array_areas = np.array([12, 15, 17.3, 9.4])
+    array_areas = np.array([12*2, 15*2, 17.3, 9.4])
     array_CO2 = array_areas * PV_CO2
 
-    Xe_mass = np.array([0, 8.8, 8.84, 0])
-    MMH_N2O4_mass = np.array([343, 340.5, 342, 0])
-    MMH_mass = np.array([0, 0, 0, 48.5])
+    Xe_mass = np.array([0*2, 8.8*2, 8.84, 0])
+    MMH_N2O4_mass = np.array([343*2, 340.5*2, 342, 0])
+    MMH_mass = np.array([0*2, 0*2, 0, 48.5])
 
     propellant_CO2 = Xe_mass * Xe_CO2 + MMH_N2O4_mass * MMH_N2O4_CO2 + MMH_mass * MMH_CO2
 
@@ -37,7 +37,7 @@ def calculate_sustainability():
     rare_scores = np.zeros_like(rare_EM_use, dtype=int)
     rare_scores[rare_ranks] = [4, 3, 2, 1]
 
-    avg_scores = (sustainability_scores + rare_scores) / 2
+    avg_scores = 0.8*sustainability_scores + 0.2*rare_scores
 
     labels = ["LRI-ACC", "LRI-CAI", "QGG", "DT"]
 
