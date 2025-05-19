@@ -3,6 +3,7 @@ import numpy as np
 from astropy.constants import G, M_earth, R_earth
 from astropy import units as u
 import matplotlib.pyplot as plt
+from scipy.interpolate import interp1d
 # Constants
 M_mars = 6.4171e23 * u.kg
 R_mars = 3389.5 * u.km
@@ -17,6 +18,11 @@ mu_sun = 1.32712440018e11  # km^3/s^2
 rho_0 = 0.020  # Atmospheric density at the surface of Mars (kg/m³)
 H = 11.1  # Scale height of the Martian atmosphere (km)
 # Mission parameters
+altitude_data = np.array([0, 10, 20, 30, 40, 50, 60, 80, 100, 150, 200, 300, 400])
+density_data = np.array([0.020, 0.009, 0.004, 0.002, 0.001, 0.0005, 0.0002, 5e-5, 1e-5, 1e-7, 1e-9, 1e-11, 1e-13])
+
+# Interpolation function
+density_interp = interp1d(altitude_data, density_data, kind='linear', fill_value='extrapolate')
 
 
 def compute_launch_to_leo(leo_radius):
@@ -89,14 +95,14 @@ def compute_atmospheric_drag(mars_altitude, spacecraft_velocity, spacecraft_mass
     # T = -23.4-0.00222*h  # Temperature in K
     # p = 0.699 * np.exp(-0.00009*h)  # Pressure in Pa
     # rho = p/(0.1921*T)
-    rho = 10**-12
+    rho = 10**-11
     print(f"Atmospheric density at {mars_altitude} km: {rho} kg/m³")
     # Compute drag force
     drag_force = 0.5 * rho * (spacecraft_velocity*1000)**2 * drag_coefficient * cross_sectional_area  # Force in N
     print(f"Drag force: {drag_force} N")
     # Compute deceleration due to drag
     deceleration = drag_force / spacecraft_mass  # Acceleration in m/s²
-    delta_v_drag = deceleration * delta_t  # Velocity change in m/s
+    delta_v_drag = (deceleration * delta_t)/1000  # Velocity change in m/s
 
     # Output results
     # print(f"At altitude {mars_altitude} km:")
@@ -175,7 +181,33 @@ def compute_atmospheric_drag(mars_altitude, spacecraft_velocity, spacecraft_mass
 # print(f'ΔV: End-of-Life Deorbit        = {delta_v_deorbit:.3f} km/s')
 # print(f'------------------------------------------')
 # print(f'Total Mission ΔV               = {total_delta_v:.3f} km/s')
+# def mars_density(altitude_km, use_interp=True):
+#     """
+#     Returns the atmospheric density at a given altitude above Mars' surface.
+#     If use_interp is True, uses interpolation from data; otherwise uses exponential model.
+#     """
+#     if use_interp:
+#         return density_interp(altitude_km)
+#     else:
+#         rho0 = 0.020  # kg/m³
+#         H = 11.1      # km
+#         return rho0 * np.exp(-altitude_km / H)
 
+# # Plotting
+# altitudes = np.linspace(0, 400, 200)
+# densities_interp = mars_density(altitudes, use_interp=True)
+# densities_exp = mars_density(altitudes, use_interp=False)
+
+# plt.figure(figsize=(8,6))
+# plt.semilogx(densities_interp, altitudes, label='Interpolated from data', color='blue')
+# plt.semilogx(densities_exp, altitudes, label='Exponential model', color='black', linestyle='--')
+# plt.scatter(density_data, altitude_data, color='red', label='Data points')
+# plt.xlabel('Density [kg/m³]')
+# plt.ylabel('Altitude [km]')
+# plt.title('Mars Atmospheric Density vs Altitude')
+# plt.legend()
+# plt.grid(True)
+# plt.show()
 
 def main(use_aerobraking, inclination_midcourse, leo_alt, mars_orbit_alt, spacecraft_mass, Cd, cross_sectional_area, delta_t):
     leo_radius = r_earth + leo_alt
@@ -221,7 +253,7 @@ def main(use_aerobraking, inclination_midcourse, leo_alt, mars_orbit_alt, spacec
         delta_v_1
     )
 
-    total_delta_v_spacecraft = (delta_v_inclination + delta_v_2 + delta_v_station_keeping + delta_v_deorbit + delta_v_drag)
+    total_delta_v_spacecraft = (delta_v_inclination + delta_v_2 + delta_v_deorbit + delta_v_drag)
     period = compute_mars_period(mars_orbit_radius)
     print(f"Period of Mars orbit: {period/60:.2f} minutes")
     # === OUTPUT ===
@@ -233,16 +265,63 @@ def main(use_aerobraking, inclination_midcourse, leo_alt, mars_orbit_alt, spacec
     print(f"ΔV: Mars Capture & Circularization       = {delta_v_2:.3f} km/s")
     print(f"ΔV: Station Keeping (4.5 yrs)  = {delta_v_station_keeping:.3f} km/s")
     print(f"ΔV: End-of-Life Deorbit        = {delta_v_deorbit:.3f} km/s")
-    print(f"ΔV: Atmospheric Drag           = {delta_v_drag/1000:.3f} km/s")
+    print(f"ΔV: Atmospheric Drag           = {delta_v_drag:.3f} km/s")
     print("------------------------------------------")
     print(f"Total Mission ΔV (launcher)    = {total_delta_v_launcher:.3f} km/s")
     print(f"Total Mission ΔV (spacecraft)  = {total_delta_v_spacecraft:.3f} km/s")
+    return {
+        "Mars Transfer Injection": delta_v_1,
+        "Inclination Change": delta_v_inclination,
+        "Capture & Circularization": delta_v_2,
+        "Station Keeping": delta_v_station_keeping,
+        "Deorbit": delta_v_deorbit,
+        "Atmospheric Drag": delta_v_drag
+    }
 
-
-
+def run_all_scenarios():
+    scenarios = {
+        "Aerobraking + Midcourse":      dict(use_aerobraking=True,  inclination_midcourse=True),
+        "No Aerobraking + Midcourse":   dict(use_aerobraking=False, inclination_midcourse=True),
+        "Aerobraking + No Midcourse":   dict(use_aerobraking=True,  inclination_midcourse=False),
+        "No Aerobraking + No Midcourse":dict(use_aerobraking=False, inclination_midcourse=False),
+    }
+    results = {}
+    for label, opts in scenarios.items():
+        dv = main(
+            use_aerobraking=opts["use_aerobraking"],
+            inclination_midcourse=opts["inclination_midcourse"],
+            leo_alt=200, mars_orbit_alt=200,
+            spacecraft_mass=850, Cd=2.6, cross_sectional_area=2,
+            delta_t=3.3*365*24*3600
+        )
+        results[label] = dv
+    return results
 
 
 #SIMULATION
+
+def plot_comparison_deltav(results):
+    mission_phases = [
+        "Mars Transfer Injection",
+        "Inclination Change",
+        "Capture & Circularization",
+        "Station Keeping",
+        "Deorbit",
+        "Atmospheric Drag"
+    ]
+    plt.figure(figsize=(10, 6))
+    for label, dv_dict in results.items():
+        dv_list = [dv_dict[phase] for phase in mission_phases]
+        cumulative = np.cumsum(dv_list)
+        plt.plot(mission_phases, cumulative, marker='o', label=label)
+    plt.title("Cumulative ΔV Budget per Mission Phase")
+    plt.xlabel("Mission Phase")
+    plt.ylabel("Cumulative ΔV (km/s)")
+    plt.xticks(rotation=30)
+    plt.grid(True)
+    plt.legend()
+    plt.tight_layout()
+    plt.show()
 
 
 def simulate_and_plot():
@@ -431,12 +510,13 @@ def simulate_and_plot2():
 
 
 if __name__ == "__main__":
-    main(use_aerobraking=True, inclination_midcourse= True, leo_alt=200, mars_orbit_alt = 200, spacecraft_mass = 850, Cd = 2.6, cross_sectional_area = 2, delta_t = 3.8*365*24*3600)
+    main(use_aerobraking=True, inclination_midcourse= True, leo_alt=200, mars_orbit_alt = 200, spacecraft_mass = 850, Cd = 2.6, cross_sectional_area = 2, delta_t = 3.3*365*24*3600)
     main(use_aerobraking=False, inclination_midcourse= False, leo_alt=200, mars_orbit_alt = 200, spacecraft_mass = 850, Cd = 2.6, cross_sectional_area = 2, delta_t = 3.8*365*24*3600)
-    main(use_aerobraking=True, inclination_midcourse= False, leo_alt=200, mars_orbit_alt = 200, spacecraft_mass = 850, Cd = 2.6, cross_sectional_area = 2, delta_t = 3.8*365*24*3600)
+    main(use_aerobraking=True, inclination_midcourse= False, leo_alt=200, mars_orbit_alt = 200, spacecraft_mass = 850, Cd = 2.6, cross_sectional_area = 2, delta_t = 3.3*365*24*3600)
     main(use_aerobraking=False, inclination_midcourse= True, leo_alt=200, mars_orbit_alt = 200, spacecraft_mass = 850, Cd = 2.6, cross_sectional_area = 2, delta_t = 3.8*365*24*3600)
     period = compute_mars_period(200+r_mars)
     print(f"Period of Mars orbit: {period/60:.2f} minutes")
     #simulate_and_plot()
     #simulate_and_plot2()
+    plot_comparison_deltav(results=run_all_scenarios())
 
