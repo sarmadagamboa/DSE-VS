@@ -10,10 +10,10 @@ def test_compute_launch_to_leo():
     # Manual expected value (approximate, based on GM/r and typical LEO)
     expected = 7.784  # km/s (typical for 200 km LEO)
     assert v == pytest.approx(expected, rel=1e-2)
-
+    assert v>0
 def test_compute_deorbit():
     dv = m.compute_deorbit()
-    expected = 60  # If your function returns 60 (check your implementation)
+    expected = 60/1000  # If your function returns 60 (check your implementation)
     assert dv == pytest.approx(expected, rel=1e-6)
 
 def test_compute_dir_tranfer_injection():
@@ -36,12 +36,15 @@ def test_compute_capture_orbit():
     assert result[1] == pytest.approx(expected_v_mars_apo, rel=1e-1)
     assert result[2] == pytest.approx(expected_v_mars_per, rel=1e-1)
     assert result[3] == pytest.approx(expected_a_mars, rel=1e-1)
+    assert result[1] > 0
+    assert result[2] > 0
+    assert result[2]>result[1]
 
 def test_compute_mars_inclination_change():
     inclination = 93  # degrees
 
     result = m.compute_mars_inclination_change(v_orbit=7)
-    expected_delta_v= 5.01 # manual calculation
+    expected_delta_v= 10.16 # manual calculation
     assert expected_delta_v == pytest.approx(result, rel=1e-1)
 
 def test_compute_mars_circularization():
@@ -57,13 +60,13 @@ def test_compute_mars_period():
     T = m.compute_mars_period(mars_orbit_radius)
     # Manual expected value (approximate, for 200 km Mars orbit)
     expected = 6529  
-    assert T == pytest.approx(expected, rel=1e-1)  
+    assert T == pytest.approx(expected, rel=1e-1) 
+    assert T > 0
 
 def test_compute_station_keeping():
     dv = m.compute_station_keeping(years=4.5, delta_v_per_year=60)
     expected = 270/1000  # 60*4.5
     assert dv == pytest.approx(expected, rel=1e-6)
-
 def test_compute_atmospheric_drag():
 
     dv_drag = m.compute_atmospheric_drag(
