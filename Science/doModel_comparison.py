@@ -3,7 +3,7 @@ import matplotlib.pyplot as plt
 from matplotlib.lines import Line2D
 import matplotlib.cm as cm
 
-def plot_enhanced_comparative_sst_measurements():
+def plot_comparative_measurements():
     # Parameters
     altitude = 200000  # fixed satellite altitude (m) - 200km
     R = 3.3895e6  # Mars radius (m)
@@ -138,4 +138,4 @@ def plot_enhanced_comparative_sst_measurements():
     plt.show()
 
 # Run the function
-plot_enhanced_comparative_sst_measurements()
+plot_comparative_measurements()
