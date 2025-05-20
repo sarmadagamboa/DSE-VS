@@ -125,7 +125,7 @@ def generate_sso_curve(a_range_km):
 
     return np.degrees(i_rad)
 
-def plot_repeat_curves(sol_range=(5, 30), sso=True, sso_a_min=3500, sso_a_max=3850):
+def plot_repeat_curves(sol_range=(5, 30), sso=True, sso_a_min=3500, sso_a_max=3850, save=False):
 
     repeat_df, qk_pairs = repeat_sso(sol_range=sol_range)
     repeat_df = generate_repeat_curves(qk_pairs)
@@ -164,7 +164,8 @@ def plot_repeat_curves(sol_range=(5, 30), sso=True, sso_a_min=3500, sso_a_max=38
     ax.grid(True)
     ax.legend(loc='upper left', fontsize=8)
     fig.tight_layout()
-    fig.savefig("repeat_orbit_colored_altitude.pdf", format='pdf', bbox_inches='tight')
+    if save:
+        fig.savefig("repeat_orbit_colored_altitude.pdf", format='pdf', bbox_inches='tight')
     plt.show()
 
 if __name__ == "__main__":
