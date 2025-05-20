@@ -38,21 +38,21 @@ weights = {
 }
 
 
-def sensitivity_noise(data, weights, weight_sensitivity=False):
-    """
-    Compute the weighted scores for each design.
+# def sensitivity_noise(data, weights, weight_sensitivity=False):
+#     """
+#     Compute the weighted scores for each design.
     
-    """
-    #if data_sensitivity:
-    #    for key in data:
-    #        for i in range(len(data[key])):
-    #            data[key][i] = random.uniform(0.8, 1.2) * data[key][i]
+#     """
+#     #if data_sensitivity:
+#     #    for key in data:
+#     #        for i in range(len(data[key])):
+#     #            data[key][i] = random.uniform(0.8, 1.2) * data[key][i]
     
-    if weight_sensitivity:
-        for key in weights:
-            weights[key] = random.randint(-1, 1) + weights[key]
+#     if weight_sensitivity:
+#         for key in weights:
+#             weights[key] = random.randint(-1, 1) + weights[key]
 
-    return data, weights
+#     return data, weights
 
 
 def sensitivity_range(weights, plusminus, step):

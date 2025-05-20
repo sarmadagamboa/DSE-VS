@@ -103,7 +103,17 @@ def test_compute_weighted_scores_sensitivity():
     for key in scores:
         np.testing.assert_array_almost_equal(scores[key], exp_scores[key])
 
+def test_print_results():
+    """
+    Test the print_results function.
+    """
 
+    sens_weights, sens_axis = to.sensitivity_range(weights, plusminus=3.1, step=0.05)
+    norm_data = to.normalize_data(sens_weights, data, higher_better, scale=5)
+    scores = to.compute_weighted_scores_sensitivity(norm_data, weights, sens_weights)
+    to.print_sensitivity(scores, sens_weights, data, sens_axis)
+
+    assert True
 
 if __name__ == "__main__":
     pytest.main([__file__])
