@@ -83,9 +83,9 @@ def test_calculation_formulas(): # Test formulas used in each measurement techni
     
     
     # Verify signal power law
+    l_idx = 1  # Index for l=10 in l_range
     expected_signal = 8.5e-5 / 10**2
     assert abs(signal_power[l_idx] - expected_signal) < 1e-15
-
 
 
 def test_separations_handling():  # Test separations parameter is handled correctly 
@@ -107,15 +107,18 @@ def test_separations_handling():  # Test separations parameter is handled correc
             Fl = l / (np.sqrt(2 + 4 * l + 4 * l**2))
             Fl *= (1 / np.abs(np.sin(l * gamma / 2)))
             return gamma, Fl
+        return gamma, None
     
     separations = {
         'LRI+ACC (GRACE-FO)': 100000,  
         'LRI+CAI': 80000,                              
     }
     
-    # Calculate gamma  
-    lri_acc_gamma = calculate_with_separation('LRI+ACC (GRACE-FO)', separations['LRI+ACC (GRACE-FO)'])
-    lri_cai_gamma= calculate_with_separation('LRI+CAI', separations['LRI+CAI'])
+    # Calculate gamma and Fl
+    lri_acc_gamma, lri_acc_Fl = calculate_with_separation('LRI+ACC (GRACE-FO)', separations['LRI+ACC (GRACE-FO)'])
+    lri_cai_gamma, lri_cai_Fl = calculate_with_separation('LRI+CAI', separations['LRI+CAI'])
     
-    
+    # Check  gamma and Fl  values 
     assert lri_acc_gamma > lri_cai_gamma > 0
+    assert lri_acc_Fl is not None
+    assert lri_cai_Fl is not None

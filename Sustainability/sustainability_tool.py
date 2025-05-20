@@ -55,4 +55,5 @@ def calculate_sustainability():
 
     return sustainability_impact
 
-calculate_sustainability()
+if __name__ == "__main__":
+    calculate_sustainability()

@@ -140,11 +140,11 @@ class Load_calculation:
         self.mass = sc_mass
 
         
-    def launcher_loading(self):
-        fnat_ax = 20
-        fnat_lat = 6
-        maxg_ax = 6
-        maxg_lat = 2
+    def launcher_loading(self, fnat_ax=20, fnat_lat=6, maxg_ax = 6, maxg_lat = 2):
+        self.fnat_ax = fnat_ax
+        self.fnat_lat = fnat_lat
+        self.maxg_ax = maxg_ax
+        self.maxg_lat = maxg_lat
 
         p_ax = maxg_ax  * self.mass * 9.81
         p_lat =  maxg_lat * self.mass * 9.81
@@ -227,12 +227,25 @@ class Load_calculation:
 
         return self.weight
 
+    def calculate_area_inertia_thickness(self):
+        A_req = (self.fnat_ax/0.25)**2*self.mass*self.geometry.height/self.material.E
+        I_req= (self.fnat_lat/0.56)**2*self.mass*self.geometry.height**3/self.material.E
+        t_Areq = A_req/(2*self.geometry.elements[0] + 2*self.geometry.elements[1])
+        t_Ireq = 3*I_req/(self.geometry.elements[0]**2*self.geometry.elements[1] + self.geometry.elements[1]**2*self.geometry.elements[0])
+
+        t_sreq_ult = self.load / (2 * (self.geometry.elements[0] + self.geometry.elements[1]) * self.material.s_ult) * 1.1
+        t_sreq_yld = self.load / (2 * (self.geometry.elements[0] + self.geometry.elements[1]) * self.material.s_yld) * 1.1
+
+        self.rigidity_t = max(t_Areq, t_Ireq, t_sreq_ult, t_sreq_yld)
+        print(t_Areq, t_Ireq, t_sreq_ult, t_sreq_yld, self.rigidity_t, self.geometry.elements[0], self.geometry.elements[1])
+
+        return self.rigidity_t
 
 
 
 if __name__ == "__main__":
     points = [0, 1, 2, 3]
-    x = [0, 1.4, 1.4, 0]
+    x = [0, 1.45, 1.45, 0]
     y = [0, 0, 1, 1]
 
     stringers = [0, 0, 0, 0] #number of stringers per element
@@ -248,11 +261,12 @@ if __name__ == "__main__":
     launchload = load_calc.launcher_loading()
     loadbearing = load_calc.calculate_loads()
     weight = load_calc.calculate_weight()
+    rigidity_t = load_calc.calculate_area_inertia_thickness()
 
     print(f"Launch load: {launchload}")
     print(f"Load bearing: {loadbearing}")
     print(f"Weight: {weight}")
-
+    print(f"Rigidity thickness: {rigidity_t}")
 
     # Plot setup
     fig, ax1 = plt.subplots()
@@ -276,3 +290,7 @@ if __name__ == "__main__":
     plt.title('Load Bearing and Mass vs. Thickness')
     plt.grid(True)
     plt.show()
+
+
+
+        
