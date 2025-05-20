@@ -1,7 +1,7 @@
 import numpy as np
 import math
 import pytest
-import propulsion
+from propulsion import *
 
 def test_compute_mass_after_deltav():
 # Test 1: Zero delta-v should result in no propellant needed
