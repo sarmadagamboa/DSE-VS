@@ -25,7 +25,7 @@ class Material:
         self.nu = nu
 
 class Polygon:
-    def __init__(self, height, points, px, py, stringers, thickness):
+    def __init__(self, height, px, py, stringers, thickness):
         '''Initializes the Polygon class
         INPUTS:
             height: FLOAT -> height of the polygon
@@ -39,7 +39,7 @@ class Polygon:
             None
         '''
         self.height = height
-        self.points = points
+        self.points = list(range(0, len(px)))
         self.px = px
         self.py = py
         self.stringers = stringers
@@ -244,18 +244,19 @@ class Load_calculation:
 
 
 if __name__ == "__main__":
-    points = [0, 1, 2, 3]
-    x = [0, 1.45, 1.45, 0]
-    y = [0, 0, 1, 1]
-
+    ### INPUTS ###
+    x = [0, 1.45, 1.45, 0] #x-coordinates of the polygon points
+    y = [0, 0, 1, 1] #y-coordinates of the polygon points
     stringers = [0, 0, 0, 0] #number of stringers per element
-    #print(stringers)
-    t = np.linspace(0.0001, 0.006, 50)
-    #print(t)
+    t = np.linspace(0.0001, 0.006, 50) #thickness (range) of the skin
+    sc_mass = 1063 #mass of the spacecraft in kg
+    sc_height = 4.5 #height of the spacecraft in m
+    
+    ### CREATE OBJECTS ###
     aluminium = Material(E=70e9, rho=2800, s_yld=448e6, s_ult=524e6) #based on aluminium 7075
     hat_stringer = Stringer(type='hat', thickness=0.0005, lengths=[0.01, 0.01, 0.01], material=aluminium)
-    box = Polygon(height=4.5, points=points, px=x, py=y, stringers=stringers, thickness=t)
-    load_calc = Load_calculation(geometry=box, stringer=hat_stringer, material=aluminium, sc_mass=1063)
+    box = Polygon(height=sc_height, px=x, py=y, stringers=stringers, thickness=t)
+    load_calc = Load_calculation(geometry=box, stringer=hat_stringer, material=aluminium, sc_mass=sc_mass)
 
     #load_calc.launcher_loading()
     launchload = load_calc.launcher_loading()
