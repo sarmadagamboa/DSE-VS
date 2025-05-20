@@ -8,9 +8,9 @@ data = {
     "Designs":                  ["LRI-ACC", "LRI-CAI", "QGG", "DT"],
     "Dry_mass":                 [529, 656, 665, 440],                 # in kg (lower is better)
     "Power":                    [763, 991, 1128, 614],                # in W (lower is better)
-    "Cost":                     [527.8, 645.0, 417.1, 317.9],     # in M€ (lower is better)
+    "Cost":                     [527.8, 645.0, 417.1, 317.9],         # in M€ (lower is better)
     "D/O":                      [115, 160, 40, 20],                   # D/O (higher is better) 
-    "Temporal sensitivity":     [5, 7, 0, 2],             # error inversed (higher is better)(10+)
+    "Temporal sensitivity":     [5, 7, 0, 2],                         # error inversed (higher is better)(10+)
     "Sustainability":           [2.2, 1, 2.8, 4],                     # (higher is better)
     "Risk":                     [0.8, 1, 0.6, 0.2],                   # (lower is better)
 }
@@ -38,15 +38,15 @@ weights = {
 }
 
 
-def sensitivity_noise(data, weights, data_sensitivity=False, weight_sensitivity=False):
+def sensitivity_noise(data, weights, weight_sensitivity=False):
     """
     Compute the weighted scores for each design.
     
     """
-    if data_sensitivity:
-        for key in data:
-            for i in range(len(data[key])):
-                data[key][i] = random.uniform(0.8, 1.2) * data[key][i]
+    #if data_sensitivity:
+    #    for key in data:
+    #        for i in range(len(data[key])):
+    #            data[key][i] = random.uniform(0.8, 1.2) * data[key][i]
     
     if weight_sensitivity:
         for key in weights:
@@ -56,14 +56,15 @@ def sensitivity_noise(data, weights, data_sensitivity=False, weight_sensitivity=
 
 
 def sensitivity_range(weights):
-    minus = 1.1
-    plus = 1.1
+    minus = 3.1
+    plus = 3.1
     step = 0.05
     
     sens_weights = {}
+    sens_weights_xist = {}
     for key in weights:
-        sens_weights[key] = np.arange(weights[key]-minus, weights[key]+plus, step)
-    sens_weights_xist = np.arange(-minus, plus, step)
+        sens_weights[key] = np.arange(max(weights[key]-minus, 0), weights[key]+plus, step)
+        sens_weights_xist[key] = np.arange(max(weights[key]-minus, 0)-weights[key], plus, step)
     return sens_weights, sens_weights_xist
 
 
@@ -166,10 +167,10 @@ def print_results(score, norm_data, weights):
 
 def print_sensitivity(scores, sens_weights, data, sens_axis):
     for key in scores:
-        plt.plot(sens_axis, scores[key][0],label=data["Designs"][0])
-        plt.plot(sens_axis, scores[key][1],label=data["Designs"][1])
-        plt.plot(sens_axis, scores[key][2],label=data["Designs"][2])
-        plt.plot(sens_axis, scores[key][3],label=data["Designs"][3])
+        plt.plot(sens_axis[key], scores[key][0],label=data["Designs"][0])
+        plt.plot(sens_axis[key], scores[key][1],label=data["Designs"][1])
+        plt.plot(sens_axis[key], scores[key][2],label=data["Designs"][2])
+        plt.plot(sens_axis[key], scores[key][3],label=data["Designs"][3])
         plt.axvline(0, color='r', linestyle='--', label="Original Weight")
         plt.title(key)
         plt.xlabel("Weight difference")
@@ -180,7 +181,7 @@ def print_sensitivity(scores, sens_weights, data, sens_axis):
 
 
 if __name__ == "__main__":
-    sensitivity = False
+    sensitivity = True
 
     if sensitivity:
         sens_weights, sens_axis = sensitivity_range(weights)
