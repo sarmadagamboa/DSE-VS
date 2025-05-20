@@ -55,10 +55,9 @@ def sensitivity_noise(data, weights, weight_sensitivity=False):
     return data, weights
 
 
-def sensitivity_range(weights):
-    minus = 3.1
-    plus = 3.1
-    step = 0.05
+def sensitivity_range(weights, plusminus, step):
+    minus = plusminus
+    plus = plusminus
     
     sens_weights = {}
     sens_weights_xist = {}
@@ -78,15 +77,15 @@ def normalize_data(weights, data, higher_is_better, scale=5):
     norm_data["Designs"] = data["Designs"]
     for key in weights:
         arr = np.array(data[key], dtype=float)
-        print(f"{key}, arr: {arr}")
+        #print(f"{key}, arr: {arr}")
         mn, mx = arr.min(), arr.max()
-        print(f"{key}, mn: {mn}, mx: {mx}")
+        #print(f"{key}, mn: {mn}, mx: {mx}")
         if higher_is_better[key]:
             norm_data[key] = scale * (arr / mx)
-            print(f"{key}, norm: {norm_data[key]}")
+            #print(f"{key}, norm: {norm_data[key]}")
         else:
             norm_data[key] = scale * (1 - (arr / mx) + (mn / mx))
-            print(f"{key}, norm: {norm_data[key]}")
+            #print(f"{key}, norm: {norm_data[key]}")
     
     return norm_data
 
@@ -132,8 +131,8 @@ def compute_weighted_scores_sensitivity(norm_data, weights, sens_weights):
             total_scores.append(score)
 
         #winner = scores["Designs"][total_scores.index(max(total_scores))]
-        print(key)
-        print(total_scores)
+        #print(key)
+        #print(total_scores)
         scores[key] = total_scores
 
     return scores
@@ -181,10 +180,10 @@ def print_sensitivity(scores, sens_weights, data, sens_axis):
 
 
 if __name__ == "__main__":
-    sensitivity = True
+    sensitivity = False
 
     if sensitivity:
-        sens_weights, sens_axis = sensitivity_range(weights)
+        sens_weights, sens_axis = sensitivity_range(weights, plusminus=3.1, step=0.05)
         norm_data = normalize_data(sens_weights, data, higher_better, scale=5)
         scores = compute_weighted_scores_sensitivity(norm_data, weights, sens_weights)
         print_sensitivity(scores, sens_weights, data, sens_axis)
