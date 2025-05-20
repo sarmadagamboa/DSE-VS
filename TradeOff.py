@@ -164,7 +164,7 @@ def print_results(score, norm_data, weights):
     print(table)
 
 
-def print_sensitivity(scores, sens_weights, data, sens_axis):
+def print_sensitivity(scores, data, sens_axis):
     for key in scores:
         plt.plot(sens_axis[key], scores[key][0],label=data["Designs"][0])
         plt.plot(sens_axis[key], scores[key][1],label=data["Designs"][1])
@@ -180,13 +180,13 @@ def print_sensitivity(scores, sens_weights, data, sens_axis):
 
 
 if __name__ == "__main__":
-    sensitivity = False
+    sensitivity = True
 
     if sensitivity:
         sens_weights, sens_axis = sensitivity_range(weights, plusminus=3.1, step=0.05)
         norm_data = normalize_data(sens_weights, data, higher_better, scale=5)
         scores = compute_weighted_scores_sensitivity(norm_data, weights, sens_weights)
-        print_sensitivity(scores, sens_weights, data, sens_axis)
+        print_sensitivity(scores, data, sens_axis)
         
     else:
         norm_data = normalize_data(weights, data, higher_better, scale=5)
