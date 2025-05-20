@@ -6,7 +6,7 @@ orbit_types = ["SSO", "Polar circ.", "Polar ecc."]
 
 # Raw scores based on trade-off matrix
 scores = {
-    "SSO": [3, 4, 4, 4],
+    "SSO": [3.5, 4, 4.5, 4],
     "Polar circ.": [5, 2.5, 1, 4],
     "Polar ecc.": [2.5, 3, 1, 2]
 }
