@@ -175,7 +175,7 @@ def print_sensitivity(scores, sens_weights, data, sens_axis):
         plt.title(key)
         plt.xlabel("Weight difference")
         plt.ylabel("Score")
-        plt.legend()
+        plt.legend(loc='center left', bbox_to_anchor=(0, 0.3))
         plt.show()
 
 
