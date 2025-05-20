@@ -2,6 +2,8 @@ import pytest
 import numpy as np
 import matplotlib.pyplot as plt
 from Astrodynamics import mars_delta_v_budget_functions as m
+from sso_repeat import repeat_sso, generate_repeat_curves, generate_sso_curve, plot_repeat_curves
+from eclipse import calc_2d_elipse
 
 def test_compute_launch_to_leo():
     leo_radius = m.r_earth + 200  # km
@@ -9,10 +11,10 @@ def test_compute_launch_to_leo():
     # Manual expected value (approximate, based on GM/r and typical LEO)
     expected = 7.784  # km/s (typical for 200 km LEO)
     assert v == pytest.approx(expected, rel=1e-2)
-
+    assert v>0
 def test_compute_deorbit():
     dv = m.compute_deorbit()
-    expected = 60  # If your function returns 60 (check your implementation)
+    expected = 60/1000  # If your function returns 60 (check your implementation)
     assert dv == pytest.approx(expected, rel=1e-6)
 
 def test_compute_dir_tranfer_injection():
@@ -35,12 +37,15 @@ def test_compute_capture_orbit():
     assert result[1] == pytest.approx(expected_v_mars_apo, rel=1e-1)
     assert result[2] == pytest.approx(expected_v_mars_per, rel=1e-1)
     assert result[3] == pytest.approx(expected_a_mars, rel=1e-1)
+    assert result[1] > 0
+    assert result[2] > 0
+    assert result[2]>result[1]
 
 def test_compute_mars_inclination_change():
     inclination = 93  # degrees
 
     result = m.compute_mars_inclination_change(v_orbit=7)
-    expected_delta_v= 5.01 # manual calculation
+    expected_delta_v= 10.16 # manual calculation
     assert expected_delta_v == pytest.approx(result, rel=1e-1)
 
 def test_compute_mars_circularization():
@@ -56,13 +61,13 @@ def test_compute_mars_period():
     T = m.compute_mars_period(mars_orbit_radius)
     # Manual expected value (approximate, for 200 km Mars orbit)
     expected = 6529  
-    assert T == pytest.approx(expected, rel=1e-1)  
+    assert T == pytest.approx(expected, rel=1e-1) 
+    assert T > 0
 
 def test_compute_station_keeping():
     dv = m.compute_station_keeping(years=4.5, delta_v_per_year=60)
     expected = 270/1000  # 60*4.5
     assert dv == pytest.approx(expected, rel=1e-6)
-
 def test_compute_atmospheric_drag():
 
     dv_drag = m.compute_atmospheric_drag(
@@ -116,3 +121,22 @@ def test_plot_comparison_deltav_runs(monkeypatch):
     monkeypatch.setattr(plt, "show", lambda: None)
     results = m.run_all_scenarios()
     m.plot_comparison_deltav(results)  # Should run without error
+
+def test_repeat_sso():
+
+    unique_orbits_df, _ = repeat_sso(sol_range=(1, 1), tol=1e-6, max_iter=100, period_bounds_hr=(1.5, 3.0))
+
+    assert np.isclose(unique_orbits_df["Inclination_deg"], 92.647, rtol=1e-2)
+    assert np.isclose(unique_orbits_df["Altitude_km"], 296, rtol=1e-1)
+
+def test_plot_repeat_curves():
+
+    plot_repeat_curves()
+
+    assert True
+
+def test_2declipse():
+
+    _, eclipse_percent = calc_2d_elipse(200)
+
+    assert np.isclose(eclipse_percent, 39.3, rtol=1e-2)

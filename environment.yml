@@ -15,4 +15,5 @@ dependencies:
   - pytest
   - pytest-cov
   - poliastro
-  - pytest 
+  - astropy
+  - sklearn

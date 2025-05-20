@@ -387,16 +387,5 @@ def analyse_monoprop_option():
         'propulsion_system_mass': total_mass_propulsion
     }
 
-
-print(analyse_hybrid_option_biprop_electric())
-
-
-
-
-
-
-
-
-
-
-
+if __name__ == "__main__":
+    print(analyse_hybrid_option_biprop_electric())
