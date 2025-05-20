@@ -2,6 +2,7 @@ import pytest
 import numpy as np
 import matplotlib.pyplot as plt
 from Astrodynamics import mars_delta_v_budget_functions as m
+from sso_repeat import repeat_sso, generate_repeat_curves, generate_sso_curve, plot_repeat_curves
 
 def test_compute_launch_to_leo():
     leo_radius = m.r_earth + 200  # km
@@ -116,3 +117,16 @@ def test_plot_comparison_deltav_runs(monkeypatch):
     monkeypatch.setattr(plt, "show", lambda: None)
     results = m.run_all_scenarios()
     m.plot_comparison_deltav(results)  # Should run without error
+
+def test_repeat_sso():
+
+    unique_orbits_df, _ = repeat_sso(sol_range=(1, 1), tol=1e-6, max_iter=100, period_bounds_hr=(1.5, 3.0))
+
+    assert np.isclose(unique_orbits_df["Inclination_deg"], 92.647, rtol=1e-2)
+    assert np.isclose(unique_orbits_df["Altitude_km"], 296, rtol=1e-1)
+
+def test_plot_repeat_curves():
+
+    plot_repeat_curves()
+
+    assert True
