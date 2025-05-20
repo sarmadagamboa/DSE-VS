@@ -149,8 +149,8 @@ class Load_calculation:
         p_ax = maxg_ax  * self.mass * 9.81
         p_lat =  maxg_lat * self.mass * 9.81
 
-        p_eq = (p_ax + 2*(p_lat*self.geometry.height/2)/1.414) *1.25 #will be checked against both buckling and yield/ultimate strength
-        ## 1.414 value above must be switched to half of the longest diagonal of the polygon
+        p_eq = (p_ax + 2*(p_lat*self.geometry.height/2)/1.7614) *1.25 #will be checked against both buckling and yield/ultimate strength
+        ## TODO!!! 1.414 value above must be switched to half of the longest diagonal of the polygon
         
         #print(p_ax,p_lat,(p_lat*l/2),p_eq/1.25,p_eq)
         self.load = p_eq
@@ -232,8 +232,8 @@ class Load_calculation:
 
 if __name__ == "__main__":
     points = [0, 1, 2, 3]
-    x = [0, 2, 2, 0]
-    y = [0, 0, 2, 2]
+    x = [0, 1.4, 1.4, 0]
+    y = [0, 0, 1, 1]
 
     stringers = [0, 0, 0, 0] #number of stringers per element
     #print(stringers)
@@ -241,8 +241,8 @@ if __name__ == "__main__":
     #print(t)
     aluminium = Material(E=70e9, rho=2800, s_yld=448e6, s_ult=524e6) #based on aluminium 7075
     hat_stringer = Stringer(type='hat', thickness=0.0005, lengths=[0.01, 0.01, 0.01], material=aluminium)
-    box = Polygon(height=1.2, points=points, px=x, py=y, stringers=stringers, thickness=t)
-    load_calc = Load_calculation(geometry=box, stringer=hat_stringer, material=aluminium, sc_mass=691)
+    box = Polygon(height=4.5, points=points, px=x, py=y, stringers=stringers, thickness=t)
+    load_calc = Load_calculation(geometry=box, stringer=hat_stringer, material=aluminium, sc_mass=1063)
 
     #load_calc.launcher_loading()
     launchload = load_calc.launcher_loading()
