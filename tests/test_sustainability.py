@@ -1,6 +1,6 @@
 import pytest
 import numpy as np
-from sustainability_tool import calculate_sustainability
+from Sustainability.sustainability_tool import calculate_sustainability
 
 def test_sustainability_tool():
 
