@@ -19,5 +19,5 @@ def test_cost_tool():
     result = calculate_total_cost(529, 52, 7.5, cost_breakdown, dual_SC=True)
     
     # This expected value must match your actual printed result from your script
-    expected = 561.5 
+    expected = 527.8 
     assert result == expected

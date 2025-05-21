@@ -58,8 +58,8 @@ def payload_power_vs_total_power_analysis(print_results=True):
     return payload_power_results
 
 
-def bus_mass_vs_cost_analysis(print_results=True):
-    Bus_Mass = [331.3, 553, 93, 744, 892]
+def dry_mass_vs_cost_analysis(print_results=True):
+    Bus_Mass = [376.3, 666, 550, 809, 1031]
     Cost = [312, 283.66, 218.6, 354.6, 495.45]
     bus_mass_cost_results = linear_regression_analysis(Bus_Mass, Cost)
     if print_results:
@@ -72,4 +72,4 @@ def bus_mass_vs_cost_analysis(print_results=True):
 
 payload_vs_dry_mass_analysis()
 payload_power_vs_total_power_analysis()
-bus_mass_vs_cost_analysis()
+dry_mass_vs_cost_analysis()
