@@ -419,6 +419,6 @@ if __name__ == "__main__":
     main(use_aerobraking=False, inclination_midcourse= True, leo_alt=200, mars_orbit_alt = 200, spacecraft_mass = 850, Cd = 2.6, cross_sectional_area = 2, delta_t = 3.8*365*24*3600)
     period = compute_mars_period(200+r_mars)
     print(f"Period of Mars orbit: {period/60:.2f} minutes")
-    #simulate_and_plot()
-    #simulate_and_plot2()
+    simulate_and_plot()
+    simulate_and_plot2()
     plot_comparison_deltav(results=run_all_scenarios())

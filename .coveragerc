@@ -1,0 +1,16 @@
+[run]
+source = .
+branch = True
+
+omit =
+    tests/*               
+    */tests/*
+
+[report]
+omit =
+    tests/*
+    */tests/*
+
+exclude_lines =
+    pragma: no cover
+    if __name__ == "__main__":

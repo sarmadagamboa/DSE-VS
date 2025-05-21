@@ -5,13 +5,13 @@ import matplotlib.cm as cm
 
 def plot_sst():
     # Parameters
-    h = np.array([100000, 150000, 200000, 250000, 300000])  # satellite altitudes (m)
+    h = np.array([100000, 150000, 200000, 250000, 300000,350000])  # satellite altitudes (m)
     R = 3.3895e6  # Mars radius (m)
     mu = 4.282837e13  # Mars gravitational parameter (m^3/s^2)
     r = R + h
     n = np.sqrt(mu / r**3)
 
-    d_fixed = 220000  # satellite separation (m) #220km GRACE-FO
+    d_fixed = 100000  # satellite separation (m) #220km GRACE-FO
     f = 1  # observation frequency (Hz)
 
     SOL_DURATION = 88775.244  # seconds in one Martian sol
@@ -19,13 +19,14 @@ def plot_sst():
     t_5_sols = 5 * SOL_DURATION
     t_30_sols = 30 * SOL_DURATION
     t_1_sols = 668.6 * SOL_DURATION
+    t_3yr_earth = 3* 365 * 24* 60 *60
 
     epsilon = 1e-8
     colors = ['b', 'g', 'r', 'purple', 'orange', 'cyan']
-    l_range = np.arange(1, 401)
+    l_range = np.arange(1, 401,dtype=np.float64)
 
     fig, axs = plt.subplots(1, 3, figsize=(15, 5), sharey=True)
-    durations = [(t_5_sols, "5 Sols", axs[0],50), (t_30_sols, "30 Sols", axs[1],90), (t_1_sols, "1 Martian Year ", axs[2],90)]
+    durations = [(t_5_sols, "5 Sols", axs[0],50), (t_30_sols, "30 Sols", axs[1],90), (t_3yr_earth, "3 Earth Years ", axs[2],90)]
 
     for t, label, ax, cutoff in durations:
         N = f * t
@@ -57,7 +58,7 @@ def plot_sst():
         ax.legend()
 
     axs[0].set_ylabel('Measurement Accuracy (σ)')
-    plt.suptitle('Sensitivity SST measurement with LRI+ACC')
+    #plt.suptitle('Sensitivity SST measurement with LRI+ACC')
     plt.tight_layout()
     plt.show()
 
@@ -363,6 +364,70 @@ def plot_sst_dist_satellites():
     plt.tight_layout()
     plt.show()
 
+def plot_sst_dist_satellites_v2():
+    # Mars constants
+    R = 3.3895e6  # Mars radius (m)
+    mu = 4.282837e13  # Mars gravitational parameter (m^3/s^2)
+    
+    # Parameters
+    height = 200000  # satellite altitude (m)
+    d_values = np.array([50000, 80000, 100000, 200000])  # separations (m)
+    f = 1  # observation frequency (Hz)
+    epsilon = 1e-8
+    l_range = np.arange(1, 401)
+    
+    # Three Earth years in seconds
+    EARTH_YEAR_SECONDS = 365 * 24 * 60 * 60
+    duration = 3 * EARTH_YEAR_SECONDS  # 3 Earth years in seconds
+    
+    # Color palette
+    colors = ['#1E90FF',  # Dodger Blue
+          '#32CD32',  # Lime Green
+          '#FF4500',  # Orange Red
+          '#9400D3',  # Dark Violet
+          '#FF1493',  # Deep Pink
+          '#FFD700']  # Gold
+    
+    # Create single plot
+    fig, ax = plt.subplots(1, 1, figsize=(10, 6))
+    
+    current_r = R + height
+    n = np.sqrt(mu / current_r**3)  # orbital frequency
+    
+    for j, d_fixed in enumerate(d_values):
+        gamma = 2 * np.arctan((d_fixed / 2) / current_r)
+        
+        # Calculate the form factor Fl directly for all l values
+        with np.errstate(divide='ignore', invalid='ignore'):
+            Fl = l_range / np.sqrt(2 + 4 * l_range + 4 * l_range**2)
+            Fl *= 1 / (np.abs(np.sin(l_range * gamma / 2)) + 1e-10)
+        
+        # Calculate sigma directly using the functions for all l values
+        sigma = (epsilon / np.sqrt(f * duration)) * (1 / (n * current_r)) * (current_r / R)**l_range * Fl
+        
+        # Plot the full range
+        ax.plot(l_range, sigma, color=colors[j], linestyle='-', linewidth=2, 
+                label=f'{d_fixed / 1000:.0f} km sep')
+    
+    # Add reference line for observed signal power law
+    rms_signal = 8.5e-5 / l_range**2
+    ax.plot(l_range, rms_signal, 'k--', linewidth=2, label='Observed Signal Power Law')
+    
+    # Configure axis
+    ax.set_title(f'Measurement Accuracy vs. l (3 Earth Years)', fontsize=13)
+    ax.set_xlabel('Spherical Harmonic Order (l)', fontsize=12)
+    ax.set_ylabel('Measurement Accuracy (σ)', fontsize=12)
+    ax.set_yscale('log')
+    ax.set_ylim(1e-16, 1e-4)
+    ax.set_xlim(0, 400)
+    ax.grid(True, which="both", ls="-", alpha=0.2)
+    ax.legend(fontsize=9)
+    
+    # Set overall title
+    #fig.suptitle('Sensitivity SST Measurement with LRI+ACC\nAltitude = 200 km, Varying Satellite Separation', fontsize=15)
+    
+    plt.tight_layout()
+    plt.show()
 
 
 def plot_sst_acc_vs_cai():
@@ -444,9 +509,11 @@ def plot_sst_acc_vs_cai():
 
 
 # Run the function
+
 plot_sst()
 #plot_sst_v2()              #tried to integrate
 #plot_sst_smoothened()      #here Fl is smoothened
-plot_sst_v3()                #Integrated following Milano 
-plot_sst_dist_satellites()
-plot_sst_acc_vs_cai()
+#plot_sst_v3()                #Integrated following Milano 
+#plot_sst_dist_satellites()
+#plot_sst_acc_vs_cai()
+#plot_sst_dist_satellites_v2()

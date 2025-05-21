@@ -15,4 +15,6 @@ dependencies:
   - pytest
   - pytest-cov
   - poliastro
-  - pytest 
+  - astropy
+  - scikit-learn
+  - beautifultable
