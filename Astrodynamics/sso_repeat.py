@@ -66,6 +66,8 @@ def repeat_sso(sol_range=(5, 30), tol=1e-6, max_iter=100, period_bounds_hr=(1.5,
     unique_orbits_df = df.sort_values(['K', 'Altitude_km']).drop_duplicates(subset=['Inclination_deg', 'Altitude_km'], keep='first').reset_index(drop=True)
     unique_orbits_df.head()
 
+    print(unique_orbits_df.to_string(index=False))
+
     qk_pairs_used = unique_orbits_df[['Q', 'K']].drop_duplicates()
     qk_list = list(map(tuple, qk_pairs_used.values))
         
@@ -107,10 +109,7 @@ def generate_repeat_curves(QK_list, i_range_deg=(90, 95), tol=1e-6, max_iter=100
 
                 a *= (P_omega_target / P_omega)
 
-    results = pd.DataFrame(results)
-    print(results.to_string(index=False))
-
-    return results
+    return pd.DataFrame(results)
 
 def generate_sso_curve(a_range_km):
 
