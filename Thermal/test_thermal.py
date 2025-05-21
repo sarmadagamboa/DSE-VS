@@ -27,6 +27,6 @@ def test_compute_heater_power_coldcase():
     tc.compute_heater_power_coldcase
 
 def test_main():
-    tc.main
+    tc.main()
 
     return True
