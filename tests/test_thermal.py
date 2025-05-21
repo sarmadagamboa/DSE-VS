@@ -1,6 +1,6 @@
 import numpy as np
 import pytest
-import Thermal_Control as tc
+import Thermal.Thermal_Control as tc
 
 
 def test_filter_subsystems_above_Tcold():
