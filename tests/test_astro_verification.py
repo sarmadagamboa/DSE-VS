@@ -2,8 +2,8 @@ import pytest
 import numpy as np
 import matplotlib.pyplot as plt
 from Astrodynamics import mars_delta_v_budget_functions as m
-from sso_repeat import repeat_sso, generate_repeat_curves, generate_sso_curve, plot_repeat_curves
-from eclipse import calc_2d_elipse
+from Astrodynamics.sso_repeat import repeat_sso, generate_repeat_curves, generate_sso_curve, plot_repeat_curves
+from Astrodynamics.eclipse import calc_2d_elipse
 
 def test_compute_launch_to_leo():
     leo_radius = m.r_earth + 200  # km

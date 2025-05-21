@@ -1,7 +1,7 @@
 import pytest
 import numpy as np
 import matplotlib.pyplot as plt
-import TradeOff as to
+import TradeOff.TradeOff as to
 
 data = {
     "Designs":                  ["ONE", "TWO", "THREE"],

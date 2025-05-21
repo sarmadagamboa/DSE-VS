@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 import numpy as np
 import pytest
-from Power import Mission, kelly_cos, solar_array_sizing, battery_sizing
+from Power.Power import Mission, kelly_cos, solar_array_sizing, battery_sizing
 
 # Kelly–cosine approximation cases
 @dataclass
