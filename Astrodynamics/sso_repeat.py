@@ -107,6 +107,8 @@ def generate_repeat_curves(QK_list, i_range_deg=(90, 95), tol=1e-6, max_iter=100
 
                 a *= (P_omega_target / P_omega)
 
+    print(results.to_string(index=False))
+
     return pd.DataFrame(results)
 
 def generate_sso_curve(a_range_km):
