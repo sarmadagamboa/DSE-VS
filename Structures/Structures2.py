@@ -211,7 +211,6 @@ class Load_calculation:
         #print(f"Total load bearing: {self.total_load_bearing}")
         #print(f"Total area: {self.total_area}")
         #print(f"Total stress: {self.total_stress}")
-        print(self.total_load_bearing)
         return self.total_load_bearing
 
     def calculate_weight(self):
