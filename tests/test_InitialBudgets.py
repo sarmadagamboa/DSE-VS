@@ -1,4 +1,4 @@
-from Budgets.InitialBudgets import payload_vs_dry_mass_analysis, payload_power_vs_total_power_analysis, bus_mass_vs_cost_analysis
+from Budgets.InitialBudgets import payload_vs_dry_mass_analysis, payload_power_vs_total_power_analysis, dry_mass_vs_cost_analysis
 
 
 
@@ -15,7 +15,7 @@ def test_payload_power_vs_total_power_analysis():
     assert round(result["intercept"], 2) == 888.01
 
 def test_bus_mass_vs_cost_analysis():
-    result = bus_mass_vs_cost_analysis()
-    assert round(result["r2"], 4) == 0.7771
-    assert round(result["coef"], 2) == 0.29
-    assert round(result["intercept"], 2) == 183.52
+    result = dry_mass_vs_cost_analysis()
+    assert round(result["r2"], 4) == 0.6269
+    assert round(result["coef"], 2) == 0.33
+    assert round(result["intercept"], 2) == 107.45

@@ -1,11 +1,11 @@
-from Budgets.InitialBudgets import bus_mass_vs_cost_analysis
+from InitialBudgets import dry_mass_vs_cost_analysis
 import numpy as np
 import matplotlib.pyplot as plt
 
-Cost_coef = bus_mass_vs_cost_analysis()["coef"]
-Cost_intercept = bus_mass_vs_cost_analysis()["intercept"]
+Cost_coef = dry_mass_vs_cost_analysis()["coef"]
+Cost_intercept = dry_mass_vs_cost_analysis()["intercept"]
 
-def calculate_total_cost(mass, payload_cost, trl_margin, cost_breakdown, dual_SC, learning_curve=75, launch_cost=100):
+def calculate_total_cost(mass, payload_cost, trl_margin, cost_breakdown, dual_SC, learning_curve=80, launch_cost=100):
     adjusted_payload_cost = payload_cost * (1 + trl_margin / 100)
     raw_cost = Cost_coef * mass + Cost_intercept
     bus_cost = raw_cost * (1 - 40 / 140)

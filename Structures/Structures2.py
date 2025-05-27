@@ -25,7 +25,7 @@ class Material:
         self.nu = nu
 
 class Polygon:
-    def __init__(self, height, points, px, py, stringers, thickness):
+    def __init__(self, height, px, py, stringers, thickness):
         '''Initializes the Polygon class
         INPUTS:
             height: FLOAT -> height of the polygon
@@ -39,7 +39,7 @@ class Polygon:
             None
         '''
         self.height = height
-        self.points = points
+        self.points = list(range(0, len(px)))
         self.px = px
         self.py = py
         self.stringers = stringers
@@ -140,11 +140,11 @@ class Load_calculation:
         self.mass = sc_mass
 
         
-    def launcher_loading(self):
-        fnat_ax = 20
-        fnat_lat = 6
-        maxg_ax = 6
-        maxg_lat = 2
+    def launcher_loading(self, fnat_ax=20, fnat_lat=6, maxg_ax = 6, maxg_lat = 2):
+        self.fnat_ax = fnat_ax
+        self.fnat_lat = fnat_lat
+        self.maxg_ax = maxg_ax
+        self.maxg_lat = maxg_lat
 
         p_ax = maxg_ax  * self.mass * 9.81
         p_lat =  maxg_lat * self.mass * 9.81
@@ -211,7 +211,6 @@ class Load_calculation:
         #print(f"Total load bearing: {self.total_load_bearing}")
         #print(f"Total area: {self.total_area}")
         #print(f"Total stress: {self.total_stress}")
-        print(self.total_load_bearing)
         return self.total_load_bearing
 
     def calculate_weight(self):
@@ -227,32 +226,47 @@ class Load_calculation:
 
         return self.weight
 
+    def calculate_area_inertia_thickness(self):
+        A_req = (self.fnat_ax/0.25)**2*self.mass*self.geometry.height/self.material.E
+        I_req= (self.fnat_lat/0.56)**2*self.mass*self.geometry.height**3/self.material.E
+        t_Areq = A_req/(2*self.geometry.elements[0] + 2*self.geometry.elements[1])
+        t_Ireq = 3*I_req/(self.geometry.elements[0]**2*self.geometry.elements[1] + self.geometry.elements[1]**2*self.geometry.elements[0])
+
+        t_sreq_ult = self.load / (2 * (self.geometry.elements[0] + self.geometry.elements[1]) * self.material.s_ult) * 1.1
+        t_sreq_yld = self.load / (2 * (self.geometry.elements[0] + self.geometry.elements[1]) * self.material.s_yld) * 1.1
+
+        self.rigidity_t = max(t_Areq, t_Ireq, t_sreq_ult, t_sreq_yld)
+        print(t_Areq, t_Ireq, t_sreq_ult, t_sreq_yld, self.rigidity_t, self.geometry.elements[0], self.geometry.elements[1])
+
+        return self.rigidity_t
 
 
 
 if __name__ == "__main__":
-    points = [0, 1, 2, 3]
-    x = [0, 1.4, 1.4, 0]
-    y = [0, 0, 1, 1]
-
+    ### INPUTS ###
+    x = [0, 1.45, 1.45, 0] #x-coordinates of the polygon points
+    y = [0, 0, 1, 1] #y-coordinates of the polygon points
     stringers = [0, 0, 0, 0] #number of stringers per element
-    #print(stringers)
-    t = np.linspace(0.0001, 0.006, 50)
-    #print(t)
+    t = np.linspace(0.0001, 0.006, 50) #thickness (range) of the skin
+    sc_mass = 1063 #mass of the spacecraft in kg
+    sc_height = 4.5 #height of the spacecraft in m
+    
+    ### CREATE OBJECTS ###
     aluminium = Material(E=70e9, rho=2800, s_yld=448e6, s_ult=524e6) #based on aluminium 7075
     hat_stringer = Stringer(type='hat', thickness=0.0005, lengths=[0.01, 0.01, 0.01], material=aluminium)
-    box = Polygon(height=4.5, points=points, px=x, py=y, stringers=stringers, thickness=t)
-    load_calc = Load_calculation(geometry=box, stringer=hat_stringer, material=aluminium, sc_mass=1063)
+    box = Polygon(height=sc_height, px=x, py=y, stringers=stringers, thickness=t)
+    load_calc = Load_calculation(geometry=box, stringer=hat_stringer, material=aluminium, sc_mass=sc_mass)
 
     #load_calc.launcher_loading()
     launchload = load_calc.launcher_loading()
     loadbearing = load_calc.calculate_loads()
     weight = load_calc.calculate_weight()
+    rigidity_t = load_calc.calculate_area_inertia_thickness()
 
     print(f"Launch load: {launchload}")
     print(f"Load bearing: {loadbearing}")
     print(f"Weight: {weight}")
-
+    print(f"Rigidity thickness: {rigidity_t}")
 
     # Plot setup
     fig, ax1 = plt.subplots()
@@ -276,3 +290,7 @@ if __name__ == "__main__":
     plt.title('Load Bearing and Mass vs. Thickness')
     plt.grid(True)
     plt.show()
+
+
+
+        

@@ -9,56 +9,55 @@ data = {
     "Dry_mass":                 [529, 656, 665, 440],                 # in kg (lower is better)
     "Power":                    [763, 991, 1128, 614],                # in W (lower is better)
     "Cost":                     [527.8, 645.0, 417.1, 317.9],         # in M€ (lower is better)
-    "D/O":                      [115, 160, 40, 20],                   # D/O (higher is better) 
-    "Temporal sensitivity":     [5, 7, 0, 2],                         # error inversed (higher is better)(10+)
+    "Static Field Resolution":  [115, 160, 40, 20],                   # D/O (higher is better) 
+    "Temporal Field Error":     [5, 7, 0, 2],                         # error inversed (higher is better)(10+)
     "Sustainability":           [2.2, 1, 2.8, 4],                     # (higher is better)
     "Risk":                     [0.8, 1, 0.6, 0.2],                   # (lower is better)
 }
 
 # Specify which metrics are higher-is-better
 higher_better = {
-    "Dry_mass":               False,
-    "Power":                  False,
-    "Cost":                   False,
-    "D/O":                    True,   
-    "Temporal sensitivity":   True,  
-    "Sustainability":         True,
-    "Risk":                   False,
+    "Dry_mass":                 False,
+    "Power":                    False,
+    "Cost":                     False,
+    "Static Field Resolution":  True,   
+    "Temporal Field Error":     True,  
+    "Sustainability":           True,
+    "Risk":                     False,
 }
 
 # Weights for each criterion 
 weights = {
-    "Dry_mass":               1.0,
-    "Power":                  1.0,
-    "Cost":                   3.0,
-    "D/O":                    5.0,
-    "Temporal sensitivity":   5.0,
-    "Sustainability":         2.0,
-    "Risk":                   3.0,
+    "Dry_mass":                 1.0,
+    "Power":                    1.0,
+    "Cost":                     3.0,
+    "Static Field Resolution":  5.0,
+    "Temporal Field Error":     5.0,
+    "Sustainability":           2.0,
+    "Risk":                     3.0,
 }
 
 
-def sensitivity_noise(data, weights, weight_sensitivity=False):
-    """
-    Compute the weighted scores for each design.
+# def sensitivity_noise(data, weights, weight_sensitivity=False):
+#     """
+#     Compute the weighted scores for each design.
     
-    """
-    #if data_sensitivity:
-    #    for key in data:
-    #        for i in range(len(data[key])):
-    #            data[key][i] = random.uniform(0.8, 1.2) * data[key][i]
+#     """
+#     #if data_sensitivity:
+#     #    for key in data:
+#     #        for i in range(len(data[key])):
+#     #            data[key][i] = random.uniform(0.8, 1.2) * data[key][i]
     
-    if weight_sensitivity:
-        for key in weights:
-            weights[key] = random.randint(-1, 1) + weights[key]
+#     if weight_sensitivity:
+#         for key in weights:
+#             weights[key] = random.randint(-1, 1) + weights[key]
 
-    return data, weights
+#     return data, weights
 
 
-def sensitivity_range(weights):
-    minus = 3.1
-    plus = 3.1
-    step = 0.05
+def sensitivity_range(weights, plusminus, step):
+    minus = plusminus
+    plus = plusminus
     
     sens_weights = {}
     sens_weights_xist = {}
@@ -78,15 +77,15 @@ def normalize_data(weights, data, higher_is_better, scale=5):
     norm_data["Designs"] = data["Designs"]
     for key in weights:
         arr = np.array(data[key], dtype=float)
-        print(f"{key}, arr: {arr}")
+        #print(f"{key}, arr: {arr}")
         mn, mx = arr.min(), arr.max()
-        print(f"{key}, mn: {mn}, mx: {mx}")
+        #print(f"{key}, mn: {mn}, mx: {mx}")
         if higher_is_better[key]:
             norm_data[key] = scale * (arr / mx)
-            print(f"{key}, norm: {norm_data[key]}")
+            #print(f"{key}, norm: {norm_data[key]}")
         else:
             norm_data[key] = scale * (1 - (arr / mx) + (mn / mx))
-            print(f"{key}, norm: {norm_data[key]}")
+            #print(f"{key}, norm: {norm_data[key]}")
     
     return norm_data
 
@@ -132,8 +131,8 @@ def compute_weighted_scores_sensitivity(norm_data, weights, sens_weights):
             total_scores.append(score)
 
         #winner = scores["Designs"][total_scores.index(max(total_scores))]
-        print(key)
-        print(total_scores)
+        #print(key)
+        #print(total_scores)
         scores[key] = total_scores
 
     return scores
@@ -165,8 +164,9 @@ def print_results(score, norm_data, weights):
     print(table)
 
 
-def print_sensitivity(scores, sens_weights, data, sens_axis):
+def print_sensitivity(scores, data, sens_axis):
     for key in scores:
+        plt.figure(figsize=(9.6, 7.2))
         plt.plot(sens_axis[key], scores[key][0],label=data["Designs"][0])
         plt.plot(sens_axis[key], scores[key][1],label=data["Designs"][1])
         plt.plot(sens_axis[key], scores[key][2],label=data["Designs"][2])
@@ -181,13 +181,13 @@ def print_sensitivity(scores, sens_weights, data, sens_axis):
 
 
 if __name__ == "__main__":
-    sensitivity = True
+    sensitivity = False
 
     if sensitivity:
-        sens_weights, sens_axis = sensitivity_range(weights)
+        sens_weights, sens_axis = sensitivity_range(weights, plusminus=2.1, step=0.05)
         norm_data = normalize_data(sens_weights, data, higher_better, scale=5)
         scores = compute_weighted_scores_sensitivity(norm_data, weights, sens_weights)
-        print_sensitivity(scores, sens_weights, data, sens_axis)
+        print_sensitivity(scores, data, sens_axis)
         
     else:
         norm_data = normalize_data(weights, data, higher_better, scale=5)
