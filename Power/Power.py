@@ -111,7 +111,7 @@ def battery_sizing(m: Mission):
     bat_volume = E_bat / energy_density
     return bat_mass, bat_volume
 
-def main():
+if __name__ == "__main__":
     m = Mission()
 
     area, p_eol, p_bol, p_sa, inc = solar_array_sizing(m)
@@ -138,6 +138,3 @@ def main():
     print(f"{H}Total power subsystem mass: {power_mass:,.2f} kg{R}")
     print(f"{H}Solar-array area     : {area:,.2f} m²{R}")
     print(f"{H}Total s/c power (W)            : {p_eol:,.2f}{R}\n")
-
-if __name__ == "__main__":
-    main()

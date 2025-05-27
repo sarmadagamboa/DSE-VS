@@ -66,6 +66,8 @@ def repeat_sso(sol_range=(5, 30), tol=1e-6, max_iter=100, period_bounds_hr=(1.5,
     unique_orbits_df = df.sort_values(['K', 'Altitude_km']).drop_duplicates(subset=['Inclination_deg', 'Altitude_km'], keep='first').reset_index(drop=True)
     unique_orbits_df.head()
 
+    print(unique_orbits_df.to_string(index=False))
+
     qk_pairs_used = unique_orbits_df[['Q', 'K']].drop_duplicates()
     qk_list = list(map(tuple, qk_pairs_used.values))
         
