@@ -2,11 +2,18 @@ name: DSE-VS
 channels:
   - defaults
   - conda-forge
+  - tudat-team
 dependencies:
   - python=3.10
   - conda-build
+  - notebook
+  - tqdm
+  - astropy-healpix
+  - spiceypy
+  - tabulate
+  - colorama
   - numpy
-  - matplotlib
+  - matplotlib = =3.9.2
   - scipy
   - pandas
   - jupyter
@@ -18,3 +25,7 @@ dependencies:
   - astropy
   - scikit-learn
   - beautifultable
+  - tudatpy
+  - pip
+  - pip:
+    - astroquery>=0.4.8.dev9306
