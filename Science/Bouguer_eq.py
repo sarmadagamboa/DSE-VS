@@ -19,7 +19,7 @@ def plot_gravity_aquifers_single_plot():
     }
 
     # Aquifer thickness from 10 m to 3000 m
-    h_range = np.linspace(10, 3000, 500)
+    h_range = np.linspace(100, 30000, 500)
 
     # Define colors manually
     colors = ['firebrick', 'darkorange', 'goldenrod']
@@ -43,7 +43,7 @@ def plot_gravity_aquifers_single_plot():
     # Legend and grid
     plt.legend(title='Region / Depth', fontsize=10)
     plt.grid(True, linestyle='--', alpha=0.6)
-    plt.xlim(0, 3100)
+    plt.xlim(0, 31000)
     
 
     # Final layout
@@ -116,8 +116,6 @@ def plot_gravity_anomaly_difference():
     # Show plot
     plt.show()
 
-import numpy as np
-import matplotlib.pyplot as plt
 
 def plot_equator_and_deltas():
     # ---------- constants ----------
@@ -136,52 +134,46 @@ def plot_equator_and_deltas():
         'Polar':        18000,
     }
 
-    # ---------- baseline (Equator) ----------
     r_eq  = R + depths['Equator']
-    g_eq  = 2 * pi * rho * h_range * G * (R / r_eq) * 1e6     # μGal
+    g_eq  = 2 * pi * rho * h_range * G * (R / r_eq) * 1e5    # mGal
 
-    # ---------- make two‐panel figure ----------
     fig, (ax_abs, ax_delta) = plt.subplots(
         1, 2, figsize=(13, 5), sharex=True, gridspec_kw={'wspace': 0.28}
     )
 
     # === LEFT: absolute anomaly (Equator only) ===
     ax_abs.plot(h_range, g_eq, color='firebrick', lw=2)
-    ax_abs.set_title('Equator Aquifer\nAbsolute Gravity Anomaly', fontweight='bold')
+    #ax_abs.set_title('Equator Aquifer\nAbsolute Gravity Anomaly', fontweight='bold')
     ax_abs.set_xlabel('Aquifer Thickness (m)')
-    ax_abs.set_ylabel('Gravity Anomaly (μGal)')
+    ax_abs.set_ylabel('Gravity Anomaly (mGal)')
     ax_abs.grid(ls='--', alpha=0.5)
     ax_abs.set_xlim(0, 3100)
 
-    # === RIGHT: Δ relative to Equator ===
+    # RIGHT: Δ relative to Equator ===
     color_map = {'Mid Latitude': 'darkorange', 'Polar': 'goldenrod'}
     for region, D in depths.items():
         if region == 'Equator':
-            continue                      # skip baseline
+            continue
         r     = R + D
-        g_reg = 2 * pi * rho * h_range * G * (R / r) * 1e6
-        delta = g_reg - g_eq              # μGal difference
+        g_reg = 2 * pi * rho * h_range * G * (R / r) * 1e5    # mGal
+        delta = g_reg - g_eq                                  # mGal difference
         ax_delta.plot(h_range, delta,
                       label=f'{region} – Equator',
                       color=color_map[region], lw=2)
 
     ax_delta.axhline(0, color='grey', ls='--', lw=1)
-    ax_delta.set_title('Δ Gravity Anomaly\nvs Equator Baseline', fontweight='bold')
+    #ax_delta.set_title('Δ Gravity Anomaly\nvs Equator Baseline', fontweight='bold')
     ax_delta.set_xlabel('Aquifer Thickness (m)')
-    ax_delta.set_ylabel('Δ Gravity Anomaly (μGal)')
+    ax_delta.set_ylabel('Δ Gravity Anomaly (mGal)')
     ax_delta.grid(ls='--', alpha=0.5)
     ax_delta.set_xlim(0, 3100)
     ax_delta.legend(frameon=False, fontsize=9)
 
-    
-    fig.suptitle('Mars Aquifer Gravity-Anomaly Comparison', fontsize=15, fontweight='bold', y=1.05)
+    #fig.suptitle('Mars Aquifer Gravity-Anomaly Comparison', fontsize=15, fontweight='bold', y=1.05)
     fig.tight_layout()
     plt.show()
 
-
-
-
 # Run 
-plot_gravity_aquifers_single_plot()
+#plot_gravity_aquifers_single_plot()
 #plot_gravity_anomaly_difference()
 plot_equator_and_deltas()
