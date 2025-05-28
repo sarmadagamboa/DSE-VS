@@ -4,8 +4,7 @@ from tudatpy.kernel import constants
 from tudatpy.kernel.interface import spice
 from tudatpy.kernel.astro import element_conversion
 from tudatpy.kernel.numerical_simulation import environment_setup
-from tudatpy.kernel.astro.time_conversion import calendar_date_to_julian_day, julian_day_to_calendar_date
-from tudatpy.kernel.astro.epoch import epoch_from_julian_day
+from tudatpy.kernel.astro.time_conversion import calendar_date_to_julian_day, julian_day_to_calendar_date, epoch_from_julian_day
 
 # Load SPICE kernels
 spice.load_standard_kernels()
