@@ -1,0 +1,203 @@
+import numpy as np
+from scipy.integrate import solve_ivp
+import matplotlib.pyplot as plt
+from ModelConstants import *
+from SolarRadiationTorque import maximum_torque
+from AerodynamicTorque import aerodynamic_torque
+from GravityTorque import gravity_torque
+
+# Inertia matrix
+I = np.array([[Ixx, -Ixy, -Ixz],
+              [-Ixy, Iyy, -Iyz],
+              [-Ixz, -Iyz, Izz]])
+inv_I = np.linalg.inv(I)
+
+# Desired angular velocity
+omega_desired = np.array([om_x, om_y, om_z])
+
+def disturbance(t):
+    Solar_pressure_torque = maximum_torque(q, A_s, c_ps, c_g_s)
+    Gravity_gradient_torque = gravity_torque(r=r, theta=theta, I_y=Iyy, I_z=Izz)
+    Aerodynamic_torque = aerodynamic_torque(C_d=C_d, rho=rho, A=A_s, r=r, c_g=c_g_a, c_pa=c_pa)
+
+    if t < 3600:
+        Internal_disturbance_torque = np.array([0, 0, 0])
+    elif t >= 3600 and t < 3620: 
+        Internal_disturbance_torque = np.array([1e-4, -1e-4, 1e-4])
+    else:
+        Internal_disturbance_torque = np.array([np.sin(t/60)*1e-5, np.cos(t/60)*1e-5, np.sin(t/120)*1e-5])
+    total_torque = Solar_pressure_torque + Gravity_gradient_torque + Aerodynamic_torque + Internal_disturbance_torque
+    return total_torque
+
+def controller(omega, attitude_error):
+    Kp = np.array([1, 1, 1])   # Proportional gains
+    Kd = np.array([100, 100, 100])      # Derivative gains
+
+    tau = -Kp * attitude_error - Kd * (omega - omega_desired)
+
+    # Clamp and quantize torque
+    tau = np.clip(tau, min_torque, max_torque)
+    tau[0] = min_x_bit * np.round(tau[0] / min_x_bit)
+    tau[1] = min_y_bit * np.round(tau[1] / min_y_bit)
+    tau[2] = min_z_bit * np.round(tau[2] / min_z_bit)
+    return tau
+
+def dynamics(t, state):
+    omega = state[0:3]              # Angular velocity
+    attitude = state[3:6]           # Euler angles: [roll, pitch, yaw]
+
+    # Desired attitude (example: rotating in pitch)
+    desired_roll = 0
+    desired_pitch = -t * 2 * np.pi / (110 * 60)
+    desired_yaw = 0
+
+    attitude_error = attitude - np.array([desired_roll, desired_pitch, desired_yaw])
+
+    tau = controller(omega, attitude_error)
+    d = disturbance(t)
+
+    omega_cross = np.array([
+        [0, -omega[2], omega[1]],
+        [omega[2], 0, -omega[0]],
+        [-omega[1], omega[0], 0]
+    ])
+
+    omega_dot = inv_I @ (tau + d - omega_cross @ (I @ omega))
+    attitude_dot = omega  # Approximate for small angles
+
+    return np.concatenate([omega_dot, attitude_dot])
+
+# Initial state: omega = [0,0,0], attitude = [0,0,0]
+omega0 = np.array([om_x, om_y, om_z])
+attitude0 = np.array([0, 0, 0])
+state0 = np.concatenate([omega0, attitude0])
+
+# Time span and evaluation points
+t_span = (0, 110 * 60) 
+t_eval = np.linspace(t_span[0], t_span[1], 100000)
+
+# Integrate
+sol = solve_ivp(dynamics, t_span, state0, t_eval=t_eval, method='RK45')
+
+# Extract states
+omega_x = sol.y[0]
+omega_y = sol.y[1]
+omega_z = sol.y[2]
+roll = sol.y[3]
+pitch = sol.y[4]
+yaw = sol.y[5]
+
+# Desired attitude profiles
+desired_roll = np.zeros_like(roll)
+desired_pitch = -sol.t * 2 * np.pi / (110*60)
+desired_yaw = np.zeros_like(yaw)
+
+# Max deviations
+print(f'Maximum deviation from desired roll: {np.max(np.abs(roll - desired_roll))} rad')
+print(f'Maximum deviation from desired pitch: {np.max(np.abs(pitch[10000:] - desired_pitch[10000:]))} rad')
+print(f'Maximum deviation from desired yaw: {np.max(np.abs(yaw - desired_yaw))} rad')
+
+# Torque logs
+torque_log = []
+for i in range(len(sol.t)):
+    omega_i = sol.y[0:3, i]
+    attitude_i = sol.y[3:6, i]
+    desired_attitude = np.array([
+        0,
+        -sol.t[i] * 2 * np.pi / (110 * 60),
+        0
+    ])
+    attitude_error = attitude_i - desired_attitude
+    tau_i = controller(omega_i, attitude_error)
+    torque_log.append(tau_i)
+
+torque_log = np.array(torque_log)
+
+dt = sol.t[1] - sol.t[0]
+print(f"total torque supplied over one orbit: {np.sum(np.abs(torque_log)) * dt} Nm-s")
+print(f"saturation of moment wheels: {np.sum(torque_log)*dt} Nm-s")
+
+fig, axs = plt.subplots(4, 1, figsize=(12, 16), sharex=True)
+
+# --- 1. Angular Velocity ---
+axs[0].plot(sol.t[5:], omega_x[5:], label='Omega_x')
+axs[0].plot(sol.t[5:], omega_y[5:], label='Omega_y')
+axs[0].plot(sol.t[5:], omega_z[5:], label='Omega_z')
+axs[0].set_ylabel('Angular Velocity (rad/s)')
+axs[0].set_title('Spacecraft Angular Velocity')
+axs[0].grid(True)
+axs[0].legend()
+
+# --- 2. Attitude Angles ---
+axs[1].plot(sol.t[5:], roll[5:], label='Roll')
+axs[1].plot(sol.t[5:], pitch[5:], label='Pitch')
+axs[1].plot(sol.t[5:], yaw[5:], label='Yaw')
+axs[1].set_ylabel('Angle (rad)')
+axs[1].set_title('Spacecraft Attitude Angles')
+axs[1].grid(True)
+axs[1].legend()
+
+# --- 3. Control Torque ---
+axs[2].plot(sol.t, torque_log[:, 0], label='Torque_x')
+axs[2].plot(sol.t, torque_log[:, 1], label='Torque_y')
+axs[2].plot(sol.t, torque_log[:, 2], label='Torque_z')
+axs[2].set_ylabel('Control Torque (Nm)')
+axs[2].set_title('Control Torque over Time')
+axs[2].grid(True)
+axs[2].legend()
+
+# --- 4. Disturbance Torque ---
+disturbance_torque = np.array([disturbance(t) for t in sol.t])
+axs[3].plot(sol.t, disturbance_torque[:, 0], label='Disturbance Torque X', color='blue')
+axs[3].plot(sol.t, disturbance_torque[:, 1], label='Disturbance Torque Y', color='orange')
+axs[3].plot(sol.t, disturbance_torque[:, 2], label='Disturbance Torque Z', color='green')
+axs[3].set_ylabel('Disturbance Torque (Nm)')
+axs[3].set_title('Disturbance Torque over Time')
+axs[3].grid(True)
+axs[3].legend()
+# --- Common X-axis ---
+axs[3].set_xlabel('Time (s)')
+# Layout adjustment
+plt.tight_layout()
+plt.show()
+
+
+# # === Plots ===
+# plt.plot(sol.t[5:], omega_x[5:], label='Omega_x')
+# plt.plot(sol.t[5:], omega_y[5:], label='Omega_y')
+# plt.plot(sol.t[5:], omega_z[5:], label='Omega_z')
+# plt.xlabel('Time (s)')
+# plt.ylabel('Angular Velocity (rad/s)')
+# plt.title('Spacecraft Angular Velocity with Feedback Control')
+# plt.grid(True)
+# plt.legend()
+# plt.show()
+
+# plt.plot(sol.t[5:], roll[5:], label='Roll')
+# plt.plot(sol.t[5:], pitch[5:], label='Pitch')
+# plt.plot(sol.t[5:], yaw[5:], label='Yaw')
+# plt.xlabel('Time (s)')
+# plt.ylabel('Angle (rad)')
+# plt.title('Spacecraft Attitude Angles with Feedback Control')
+# plt.grid(True)
+# plt.legend()
+# plt.show()
+
+# plt.plot(sol.t, torque_log[:, 0], label='Torque_x')
+# plt.plot(sol.t, torque_log[:, 1], label='Torque_y')
+# plt.plot(sol.t, torque_log[:, 2], label='Torque_z')
+# plt.xlabel('Time (s)')
+# plt.ylabel('Control Torque (Nm)')
+# plt.title('Control Torque over Time')
+# plt.grid(True)
+# plt.legend()
+# plt.show()
+
+# # Pitch deviation
+# plt.plot(sol.t[5:], np.abs(pitch[5:] - desired_pitch[5:]), label='Pitch Deviation')
+# plt.xlabel('Time (s)')
+# plt.ylabel('Deviation (rad)')
+# plt.title('Pitch Deviation over Time')
+# plt.grid(True)
+# plt.legend()
+# plt.show()
