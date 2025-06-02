@@ -1,5 +1,6 @@
 import numpy as np
 import matplotlib.pyplot as plt
+from ModelConstants import *
 
 ## Result of this analysis is that the maximum torque occurs when the sun is perpendicular to the spacecraft
 

@@ -1,5 +1,5 @@
 import numpy as np
-
+from ModelConstants import *
 
 def aerodynamic_torque(C_d, rho, A, r, c_g, c_pa):  # This is constant over one orbit but varies over a martian year
 
@@ -14,3 +14,5 @@ def aerodynamic_torque(C_d, rho, A, r, c_g, c_pa):  # This is constant over one 
     F = 0.5*(rho*C_d*A*V**2)
     Ta = F*(c_pa - c_g)
     return np.array([0, Ta, 0])  # Return torque vector in the x, y, z directions
+
+print(f"Aerodynamic torque: {aerodynamic_torque(C_d, rho, A_s, r, c_g_a, c_pa)} Nm, sign according to flight dynamics convention")

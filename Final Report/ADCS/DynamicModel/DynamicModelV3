@@ -12,20 +12,18 @@ I = np.array([[Ixx, -Ixy, -Ixz],
               [-Ixz, -Iyz, Izz]])
 inv_I = np.linalg.inv(I)
 
-# Desired angular velocity
-omega_desired = np.array([om_x, om_y, om_z])
-
 def disturbance(t):
     Solar_pressure_torque = maximum_torque(q, A_s, c_ps, c_g_s)
     Gravity_gradient_torque = gravity_torque(r=r, theta=theta, I_y=Iyy, I_z=Izz)
     Aerodynamic_torque = aerodynamic_torque(C_d=C_d, rho=rho, A=A_s, r=r, c_g=c_g_a, c_pa=c_pa)
-
-    if t < 3600:
-        Internal_disturbance_torque = np.array([0, 0, 0])
-    elif t >= 3600 and t < 3620: 
-        Internal_disturbance_torque = np.array([1e-4, -1e-4, 1e-4])
-    else:
-        Internal_disturbance_torque = np.array([np.sin(t/60)*1e-5, np.cos(t/60)*1e-5, np.sin(t/120)*1e-5])
+    Internal_disturbance_torque = np.array([0, 0, 0]) 
+    # if t < 3600:
+    #     Internal_disturbance_torque = np.array([0, 0, 0])
+    # elif t >= 3600 and t < 3620: 
+    #     Internal_disturbance_torque = np.array([1e-4, 1e-4, 1e-4])
+    # else:
+    #     Internal_disturbance_torque = np.array([np.sin(t/60)*1e-5, np.cos(t/60)*1e-5, np.sin(t/120)*1e-5])
+    
     total_torque = Solar_pressure_torque + Gravity_gradient_torque + Aerodynamic_torque + Internal_disturbance_torque
     return total_torque
 
@@ -68,9 +66,12 @@ def dynamics(t, state):
     return np.concatenate([omega_dot, attitude_dot])
 
 # Initial state: omega = [0,0,0], attitude = [0,0,0]
-omega0 = np.array([om_x, om_y, om_z])
+omega0 = np.array([0, 0, 0])
 attitude0 = np.array([0, 0, 0])
 state0 = np.concatenate([omega0, attitude0])
+
+# Desired angular velocity
+omega_desired = np.array([om_x, om_y, om_z])
 
 # Time span and evaluation points
 t_span = (0, 110 * 60) 
@@ -93,9 +94,9 @@ desired_pitch = -sol.t * 2 * np.pi / (110*60)
 desired_yaw = np.zeros_like(yaw)
 
 # Max deviations
-print(f'Maximum deviation from desired roll: {np.max(np.abs(roll - desired_roll))} rad')
-print(f'Maximum deviation from desired pitch: {np.max(np.abs(pitch[10000:] - desired_pitch[10000:]))} rad')
-print(f'Maximum deviation from desired yaw: {np.max(np.abs(yaw - desired_yaw))} rad')
+print(f'Maximum deviation from desired roll: {np.max(np.abs(roll[10000:] - desired_roll[10000:]))*1000} mrad')
+print(f'Maximum deviation from desired pitch: {np.max(np.abs(pitch[10000:] - desired_pitch[10000:]))*1000} mrad')
+print(f'Maximum deviation from desired yaw: {np.max(np.abs(yaw[10000:] - desired_yaw[10000:]))*1000} mrad')
 
 # Torque logs
 torque_log = []
@@ -114,9 +115,9 @@ for i in range(len(sol.t)):
 torque_log = np.array(torque_log)
 
 dt = sol.t[1] - sol.t[0]
-print(f"total torque supplied over one orbit: {np.sum(np.abs(torque_log)) * dt} Nm-s")
-print(f"saturation of moment wheels: {np.sum(torque_log)*dt} Nm-s")
-
+print(f"total torque supplied over one orbit: {np.sum(np.abs(torque_log), axis=0) * dt} Nm-s")
+print(f"saturation of moment wheels: {np.sum(torque_log, axis=0)*dt} Nm-s")
+print(f"total disturbance torque over one orbit: {np.sum(np.abs([disturbance(t) for t in sol.t]), axis=0) * dt} Nm-s")
 fig, axs = plt.subplots(4, 1, figsize=(12, 16), sharex=True)
 
 # --- 1. Angular Velocity ---

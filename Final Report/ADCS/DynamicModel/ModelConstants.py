@@ -2,12 +2,12 @@ import numpy as np
 
 
 # Moments of inertia for the spacecraft
-Ixx = 5000
-Iyy = 5000
-Izz = 1000
-Ixy = 0
-Ixz = 0
-Iyz = 0
+Ixx = 274.8
+Iyy = 1882.4
+Izz = 1980.1
+Ixy = -289
+Ixz = -199.3
+Iyz = -64.2
 
 # Initial angular velocity components in rad/s
 om_x = 0
@@ -15,9 +15,9 @@ om_y = -2*np.pi/(110*60)  # one full revolution over one orbit
 om_z = 0
 
 # Minimum torque bits for the control torque in Nm
-min_x_bit = 0.0001
-min_y_bit = 0.0001
-min_z_bit = 0.0001
+min_x_bit = 0.00001 # roughly the bits achieved by thrusters on GRACE
+min_y_bit = 0.00001
+min_z_bit = 0.00001
 
 min_torque = -100
 max_torque = 100
@@ -41,4 +41,4 @@ c_g_a = 2.9 + 1.45/2
 c_pa = c_g_a + 0.5
 
 # gravity gradient torque parameters
-theta = np.pi/2 # Maximum angle between the spacecraft and the local vertical, assuming the spacecraft is in a circular orbit
+theta = 0 # Maximum torque occurs at pi/4, but this will never occur for the spacecraft
