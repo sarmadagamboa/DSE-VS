@@ -4,7 +4,6 @@ import numpy as np
 
 def plot_mars_density(year=2):
 
-    # Load data
     if year == 2:
         data = np.loadtxt(r'Final Report\Astrodynamics\tpdhsy21.txt', skiprows=1) 
 
