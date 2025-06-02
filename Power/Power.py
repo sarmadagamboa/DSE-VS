@@ -3,7 +3,7 @@ import numpy as np
 
 @dataclass
 class Mission:
-    """Mission parameters for solar‑array sizing at Mars (Mars LEO example)."""
+    """Mission parameters for solar‑array sizing at Mars"""
 
     # Sub‑system loads (W)
     power_subsystems = {
@@ -16,24 +16,13 @@ class Mission:
         "Propulsion":   21,
         "Payload":     194,
     }
-    mass_subsystems = {
-        "ADCS":       62,
-        "Structures":  149.7,
-        "TT&C":       40,
-        "CDHS":        10,
-        "Power":       0,
-        "Thermal":     29,
-        "Propulsion":   56,
-        "Payload":     32,
-    }
-
     # power subsystem mass and power estimations based on literature
     power_req_subsystems: float = sum(power_subsystems.values())  # W
-    power_subsystems["Power"] = 0.2 * power_req_subsystems       # 15margin for the power system itself
+    power_subsystems["Power"] = 0.2 * power_req_subsystems       #  margin for the power system itself
 
     # Power requirements
     power_req_eol: float = sum(power_subsystems.values())          # W at end‑of‑life
-    power_margin: float = 0.0  #system margin                         
+    power_margin: float = 0.0  # system margin, currently 0                         
 
 
     # Orbit geometry
@@ -64,7 +53,7 @@ class Mission:
     array_type: int = 0
 
 def kelly_cos(theta_deg):
-    """Kelly cosine approximation for body fixed panels (>60 deg)."""
+    """Kelly cosine approximation for body fixed panels"""
 
     KELLY = {0: 1.00, 30: 0.866, 50: 0.635, 60: 0.450, 80: 0.100, 85: 0.000}
     keys = np.array(sorted(KELLY))
@@ -117,19 +106,6 @@ if __name__ == "__main__":
     area, p_eol, p_bol, p_sa, inc = solar_array_sizing(m)
     bat_mass, bat_volume = battery_sizing(m)
     power_mass = (area * 2.06 + bat_mass + 0.071 * p_eol + 0.15)
-
-    print("\n— Mars Solar-Array Quick Sizing —")
-    print(f"Configuration               : {m.array_type}")
-    print(f"Power required at EOL (W)   : {p_eol:,.2f}")
-    print(f"BOL power density (W/m²)    : {p_bol:,.2f}")
-    print(f"Subsystem power (W)         : {m.power_req_subsystems:,.2f}")
-    print(f"Power while in sunlight (W) : {p_sa:,.2f}")
-    print(f"Incidence factor            : {inc:.3f}")
-    print(f"Array area (m²)             : {area:,.2f}")
-    print(f"Power-system margin (W)     : {m.power_subsystems['Power']:,.2f}")
-    print(f"Battery mass (kg)           : {bat_mass:,.2f}")
-    print(f"Battery volume (L)          : {bat_volume:,.2f}")
-
 
     H = "\033[1;36m"   # bold-cyan
     R = "\033[0m"      # reset
