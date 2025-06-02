@@ -1,96 +1,109 @@
-from astropy import units as u
-from astropy.time import Time, TimeDelta
-from poliastro.bodies import Sun, Mars
-from poliastro.twobody import Orbit
-from poliastro.twobody.propagation import propagate
-from poliastro.ephem import build_ephem_interpolant
-from poliastro.maneuver import Maneuver
-from poliastro.frames import Planes
-from poliastro.util import time_range
 import numpy as np
 import matplotlib.pyplot as plt
+from scipy.spatial.transform import Rotation as R
+from astropy import units as u
+from astropy.time import Time, TimeDelta
+from poliastro.bodies import Mars
+from poliastro.twobody import Orbit
+from poliastro.util import time_range
 from astropy.coordinates import get_body_barycentric
 
+# def plot_shadow_cones(ax, sun_direction, mars_radius, R_sun, sun_distance, shadow_length=50000):
+#     alpha_umbra = np.arctan((mars_radius - R_sun) / sun_distance)
+#     alpha_penumbra = np.arctan((mars_radius + R_sun) / sun_distance)
+#     L = shadow_length
 
+#     def make_cone(angle, color, label):
+#         h = np.linspace(0, L, 30)
+#         theta = np.linspace(0, 2 * np.pi, 30)
+#         H, Theta = np.meshgrid(h, theta)
+#         R_cone = H * np.tan(angle) * 100
+#         X = R_cone * np.cos(Theta)
+#         Y = R_cone * np.sin(Theta)
+#         Z = H
 
+#         cone_pts = np.stack([X, Y, Z], axis=-1).reshape(-1, 3)
+#         z_axis = np.array([0, 0, 1])
+#         rotvec = np.cross(z_axis, sun_direction)
+#         if np.linalg.norm(rotvec) != 0:
+#             angle_rot = np.arccos(np.dot(z_axis, sun_direction))
+#             rotation = R.from_rotvec(rotvec / np.linalg.norm(rotvec) * angle_rot)
+#             cone_pts = rotation.apply(cone_pts)
+
+#         cone_pts = cone_pts.reshape(X.shape + (3,))
+#         Xr, Yr, Zr = cone_pts[..., 0], cone_pts[..., 1], cone_pts[..., 2]
+#         ax.plot_surface(Xr, Yr, Zr, alpha=0.15, color=color, label=label)
+
+#     make_cone(alpha_umbra, "gray", "Umbra")
+#     make_cone(alpha_penumbra, "orange", "Penumbra")
+#     ax.scatter(0, 0, 0, color='brown', s=100, label='Mars')
+#     ax.set_xlabel("X (km)")
+#     ax.set_ylabel("Y (km)")
+#     ax.set_zlabel("Z (km)")
+#     ax.legend()
+#     ax.set_box_aspect([1, 1, 1])
 
 
 def compute_eclipse_duration():
-    # Define simulation time
     start_time = Time("2025-01-01 00:00:00", scale="utc")
+    mars_radius = Mars.R.to(u.km).value
+    R_sun = 695700  # km
 
-    # Mars parameters
-    mars_radius = Mars.R.to(u.km).value  # ~3396.2 km
+    alt = 200 * u.km
+    a = mars_radius * u.km + alt
+    orb = Orbit.circular(Mars, alt, inc=92 * u.deg, epoch=start_time)
 
-    # Sun-synchronous orbit approximations: dawn-dusk => near-polar, ~low orbit
-    # Let's assume ~200 km altitude circular orbit
-    alt = 470 * u.km
-    a = mars_radius * u.km + alt  # semi-major axis
-    ecc = 0.0 * u.one
-    inc = 92 * u.deg  # near polar orbit (dawn-dusk)
-    raan = 0 * u.deg
-    argp = 0 * u.deg
-    nu = 0 * u.deg
-
-    # Create orbit
-    orb = Orbit.from_classical(Mars, a, ecc, inc, raan, argp, nu, epoch=start_time)
-
-    # Determine period and create time range for one orbit
     period = orb.period
-    print(f"Orbit period: {period.to(u.s)/60} minutes")
-    spacing = TimeDelta((period / 500).to(u.s))  # Divide the orbit into 500 intervals
-    times = time_range(start=start_time, spacing=spacing, periods=500)
+    times = time_range(start_time, spacing=TimeDelta((period / 500).to(u.s)), periods=500)
 
-    # Get Sun position relative to Mars at each time
-    sun_positions = []
-    for t in times:
-        mars_to_sun = get_body_barycentric("sun", t) - get_body_barycentric("mars", t)
-        sun_positions.append(mars_to_sun.xyz.to(u.km).value)
+    sun_positions = np.array([
+        (get_body_barycentric("sun", t) - get_body_barycentric("mars", t)).xyz.to(u.km).value
+        for t in times
+    ])
+    sc_positions = np.array([
+        orb.propagate(t - orb.epoch).rv()[0].to(u.km).value
+        for t in times
+    ])
 
-
-    sun_positions = np.array(sun_positions)  # shape (N, 3)
-
-    # Propagate spacecraft and compute positions in Mars-centered frame
-    sc_positions = []
-    for t in times:
-        sc_pos = orb.propagate(t - orb.epoch).rv()[0]
-        sc_positions.append(sc_pos.to(u.km).value)
-
-    sc_positions = np.array(sc_positions)
-
-    # Check for eclipse: simple geometric shadow model (umbra cone)
-    eclipse_flags = []
+    penumbra_flags = []
     for sc_pos, sun_pos in zip(sc_positions, sun_positions):
-        # Vector from Mars to Sun and to spacecraft
         v_sun = sun_pos
         v_sat = sc_pos
-
-        # Angle between Sun and spacecraft vectors
         angle = np.arccos(np.dot(v_sun, v_sat) / (np.linalg.norm(v_sun) * np.linalg.norm(v_sat)))
+        r_sc = np.linalg.norm(v_sat)
+        r_sun = np.linalg.norm(v_sun)
+        alpha = np.arcsin(mars_radius / r_sc)
+        beta = np.arcsin(R_sun / r_sun)
+        penumbra = (angle > alpha - beta) and (angle < alpha + beta)
+        penumbra_flags.append(penumbra)
 
-        # Shadow cone approximation: Mars angular radius from spacecraft
-        mars_angular_radius = np.arcsin(mars_radius / np.linalg.norm(v_sat))
-
-        # Eclipse if spacecraft behind Mars relative to Sun (angle < Mars angular radius)
-        eclipse = angle < mars_angular_radius
-        eclipse_flags.append(eclipse)
-
-    eclipse_flags = np.array(eclipse_flags)
-
-    # Compute eclipse duration
+    penumbra_flags = np.array(penumbra_flags)
     dt = (period / len(times)).to(u.s)
-    total_eclipse_time = np.sum(eclipse_flags) * dt
+    penumbra_duration = np.sum(penumbra_flags) * dt
+    print(f"Penumbra eclipse duration: {penumbra_duration.to(u.min):.2f}")
 
-    print(f"Total eclipse duration over one orbit: {total_eclipse_time:.2f}")
-
-    # Optional: plot geometry
+    # 2D Time Plot
     plt.figure()
-    plt.plot(times.datetime, eclipse_flags.astype(int), drawstyle="steps-post")
-    plt.ylabel("In Eclipse")
+    plt.plot(times.datetime, penumbra_flags.astype(int), drawstyle="steps-post")
+    plt.ylabel("In Penumbra")
     plt.xlabel("Time (UTC)")
-    plt.title("Eclipse Events Over One Orbit")
+    plt.title("Penumbra Eclipse Over One Orbit")
     plt.grid(True)
+    plt.tight_layout()
     plt.show()
+
+    # 3D Visualization
+    # fig = plt.figure()
+    # ax = fig.add_subplot(111, projection='3d')
+    # sun_direction = -sun_positions[0] / np.linalg.norm(sun_positions[0])
+    # sun_distance = np.linalg.norm(sun_positions[0])
+    # shadow_direction = -sun_direction 
+    # plot_shadow_cones(ax, shadow_direction, mars_radius, R_sun, sun_distance)
+    # ax.plot(sc_positions[:, 0], sc_positions[:, 1], sc_positions[:, 2], label='Orbit', color='blue')
+    # ax.scatter(sc_positions[penumbra_flags, 0], sc_positions[penumbra_flags, 1], sc_positions[penumbra_flags, 2], color='red', s=10, label='Penumbra')
+    # ax.legend()
+    # plt.tight_layout()
+    # plt.show()
 
 if __name__ == "__main__":
     compute_eclipse_duration()
