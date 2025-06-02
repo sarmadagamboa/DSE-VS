@@ -1,37 +1,37 @@
-import - as calc_struct_mass
-import - as calc_prop_mass
+import (...) as calc_struct_mass
+import (...) as calc_prop_mass
 
 """
 calc_struct_mass(wet_mass, structural_setup)
     returns the structural mass
 
-calc_prop_mass(dry_mass, deltaV)
+calc_prop_mass(dry_mass, Transfer_DeltaV, Onorbit_deltaV)
     returns the new propellant mass
 """
 
 
-def calculate_wet_mass(inputs):
-    return sum(value for key, value in inputs["mass"].items())
+def calculate_wet_mass(inputs, dry_mass_margin=1.1):
+    return sum(value for key, value in inputs["mass"].items() if key != "Propellant_mass") * dry_mass_margin + inputs["mass"]["Propellant_mass"]
 
 
-def calculate_dry_mass(inputs):
-    return sum(value for key, value in inputs["mass"].items() if key != "Propellant_mass")
+def calculate_dry_mass(inputs, dry_mass_margin=1.1):
+    return sum(value for key, value in inputs["mass"].items() if key != "Propellant_mass") * dry_mass_margin
 
 
-def iteration_loop(inputs, values_close_percent=0.5):
+def iteration_loop(inputs, dry_mass_margin=1.1, values_close_percent=0.5):
     """Iterate until the wet mass converges to a stable value.
     """
     prop_mass_evolution = []
     wet_mass_evolution = []
 
-    inputs["wet_mass_guess"] = calculate_dry_mass(inputs) + inputs["Propellant_mass_guess"]
+    inputs["wet_mass_guess"] = calculate_dry_mass(inputs) + inputs["Structural_mass_guess"] * dry_mass_margin + inputs["Propellant_mass_guess"] #add guess for structural mass
 
     wet_mass_evolution.append(inputs["wet_mass_guess"])
     prop_mass_evolution.append(inputs["propellant_mass_guess"])
 
     inputs["mass"]["Structural_mass"] = calc_struct_mass(inputs["wet_mass_guess"], inputs["Structural setup"])
     dry_mass = calculate_dry_mass(inputs)
-    inputs["mass"]["Propellant_mass"] = calc_prop_mass(dry_mass, inputs["DeltaV"])
+    inputs["mass"]["Propellant_mass"] = calc_prop_mass(dry_mass, inputs["Insertion_DeltaV"], inputs["Onorbit_DeltaV"])
 
     wet_mass_evolution.append(calculate_wet_mass(inputs))
     prop_mass_evolution.append(inputs["mass"]["Propellant_mass"])
@@ -51,7 +51,7 @@ def iteration_loop(inputs, values_close_percent=0.5):
 
         inputs["mass"]["Structural_mass"] = calc_struct_mass(calculate_wet_mass(inputs), inputs["Structural setup"])
         dry_mass = calculate_dry_mass(inputs)
-        inputs["mass"]["Propellant_mass"] = calc_prop_mass(dry_mass, inputs["DeltaV"])
+        inputs["mass"]["Propellant_mass"] = calc_prop_mass(dry_mass, inputs["Insertion_DeltaV"], inputs["Onorbit_DeltaV"])
 
         wet_mass_evolution.append(calculate_wet_mass(inputs))
         prop_mass_evolution.append(inputs["mass"]["Propellant_mass"])
@@ -84,8 +84,12 @@ if __name__ == "__main__":
         }
 
     inputs["Propellant_mass_guess"] = 0 # kg
-    inputs["DeltaV"] = 0  # m/s -- total deltaV of the spacecraft propulsion system
+    inputs["Structural_mass_guess"] = 0 # kg
+    inputs["Insertion_DeltaV"] = 0  # m/s -- total deltaV of the Mars insertion
+    inputs["Onorbit_DeltaV"] = 0  # m/s -- total deltaV of the spacecraft after insertion
 
+#add valuesclose_percent to inputs
+#add dry_mass_margin to inputs
 
     wet_mass_evolution, prop_mass_evolution = iteration_loop(inputs)
 
