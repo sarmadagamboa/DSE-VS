@@ -6,4 +6,4 @@ def calc_payload_pointing(baffle_diameter=0.025, mirror_distance=2):
 
     return req_angle
 
-    calc_payload_pointing()
+calc_payload_pointing()
