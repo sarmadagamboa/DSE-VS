@@ -68,9 +68,7 @@ def orbital_decay(alt, year= 1, spacecraft_velocity=4.7, spacecraft_mass=850, dr
     densities = results['max_density']
 
     idx = np.abs(heights - alt).argmin()
-    print(idx)
     closest_alt = heights[idx]
-    print(closest_alt)
     rho = densities[idx]
     print(rho)
     if np.isnan(rho):
@@ -78,7 +76,6 @@ def orbital_decay(alt, year= 1, spacecraft_velocity=4.7, spacecraft_mass=850, dr
 
     r = R_mars +closest_alt*1000
     v_orbit = np.sqrt(mu / r)  # Orbital velocity in m/s
-    print(v_orbit)
     drag_force = 0.5 * rho * v_orbit**2 * drag_coefficient * cross_sectional_area
     print(drag_force)
     s = 2*np.pi * r  # Circumference of the orbit
@@ -107,10 +104,10 @@ plot_delta_v_vs_altitude(
     delta_t=3.3*365*24*3600       # seconds duration
 )
 
-altitude = 212
+altitude = 188
 decay = orbital_decay(
     alt =altitude,
-    year=1,
+    year=2,
     spacecraft_mass=850,
     drag_coefficient=2.6,
     cross_sectional_area=1.54

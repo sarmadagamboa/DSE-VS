@@ -32,7 +32,7 @@ def true_phase_angle(t, T_inner, T_outer):
     mean_motion_outer = 360 / T_outer
 
     # Phase angle is difference in angular positions
-    angle = (mean_motion_outer - mean_motion_inner) * t
+    angle = (mean_motion_outer - mean_motion_inner) * t + 2.6682
     return angle % 360  # Normalize to [0, 360) degrees
 
 def compute_launch_windows(start_date, synodic_period, T_earth, T_mars, ideal_phase_angle, tolerance_deg=1, step_days=1):
