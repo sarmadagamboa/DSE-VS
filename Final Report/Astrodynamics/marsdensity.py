@@ -60,4 +60,13 @@ def plot_mars_density(year=2):
     plt.grid(True)
     plt.show()
 
-plot_mars_density(year=2)
+    # Return max densities for further use
+    return {
+        'height': H,
+        'max_density': dmax_all
+    }
+
+# Example usage
+results = plot_mars_density(year=2)
+print("Heights (km):", results['height'])
+print("Max Densities (kg/m^3):", results['max_density'])
