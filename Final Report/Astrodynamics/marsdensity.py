@@ -12,7 +12,7 @@ def plot_mars_density(year=2):
     height = data[:, 1]
     density = data[:, 13]
 
-    H = np.arange(80, 245, 5)
+    H = np.arange(80, 300, 5)
 
     dmax_all = np.zeros_like(H, dtype=float)
     dmin_all = np.zeros_like(H, dtype=float)
@@ -60,4 +60,13 @@ def plot_mars_density(year=2):
     plt.grid(True)
     plt.show()
 
-plot_mars_density(year=2)
+    # Return max densities for further use
+    return {
+        'height': H,
+        'max_density': dmax_all
+    }
+
+# Example usage
+results = plot_mars_density(year=2)
+print("Heights (km):", results['height'])
+print("Max Densities (kg/m^3):", results['max_density'])
