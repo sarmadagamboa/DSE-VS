@@ -98,7 +98,7 @@ def generate_repeat_curves(QK_list, i_range_deg=(90, 95), tol=1e-6, max_iter=100
                 P_omega = P_k / (1 + (3 * J2 * R_M**2 * (3 - 4 * np.sin(i_rad)**2)) / (2 * a**2))
                 error = P_omega - P_omega_target
 
-                if abs(error) < tol and (200 < a - R_M < 350) and (30 % K == 0):
+                if abs(error) < tol and (100 < a - R_M < 350) and (30 % K == 0):
                     results.append({
                         'Q': Q,
                         'K': K,
@@ -161,7 +161,7 @@ def plot_repeat_curves(sol_range=(5, 30), sso=True, sso_a_min=3400, sso_a_max=38
 
     ax.set_xlabel('Altitude [km]', fontsize=12)
     ax.set_ylabel('Inclination [deg]', fontsize=12)
-    plt.xlim(180, 360)
+    plt.xlim(160, 360)
     ax.set_title('Sun-Synchronous Mars Repeat Orbits', fontsize=14)
     ax.grid(True)
     ax.legend(loc='upper left', fontsize=8)
