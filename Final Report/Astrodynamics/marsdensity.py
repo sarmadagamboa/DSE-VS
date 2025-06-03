@@ -1,45 +1,63 @@
 import pandas as pd
 import matplotlib.pyplot as plt
+import numpy as np
 
 def plot_mars_density(year=2):
-
     if year == 2:
-        file_path = r"Final Report\Astrodynamics\tpdhsy21.txt"
+        data = np.loadtxt(r'Final Report\Astrodynamics\tpdhsy21.txt', skiprows=1) 
     elif year == 1:
-        file_path = r"Final Report\Astrodynamics\tpdhsy11.txt"
-    
-    with open(file_path, 'r') as f:
-        lines = f.readlines()
+        data = np.loadtxt(r'Final Report\Astrodynamics\tpdhsy11.txt', skiprows=1) 
 
-    rows = []
-    for line in lines:
-        parts = line.strip().split()
-        if len(parts) < 16:
-            continue
-        try:
-            ls = int(parts[0])           
-            alt = float(parts[1])        
-            rho = float(parts[15])       
-        except ValueError:
-            continue
-        if ls == 270:
-            rows.append((alt, rho * 1e-12))  
+    Ls = data[:, 0]
+    height = data[:, 1]
+    density = data[:, 13]
 
-    df = pd.DataFrame(rows, columns=["Altitude_km", "Density_kg_per_m3"])
-    df_max = df.groupby("Altitude_km").max().reset_index().sort_values("Altitude_km")
+    H = np.arange(80, 245, 5)
 
-    plt.figure()
-    plt.plot(df_max["Density_kg_per_m3"], df_max["Altitude_km"])
-    plt.xlabel("Max Density [kg/m³]")
-    plt.ylabel("Altitude [km]")
+    dmax_all = np.zeros_like(H, dtype=float)
+    dmin_all = np.zeros_like(H, dtype=float)
+    for i, h in enumerate(H):
+        dens_at_h = density[height == h]
+        if len(dens_at_h) > 0:
+            dmax_all[i] = np.max(dens_at_h)
+            dmin_all[i] = np.min(dens_at_h)
+        else:
+            dmax_all[i] = np.nan
+            dmin_all[i] = np.nan
+
+    mask_270 = Ls == 270
+    dens_270 = density[mask_270]
+    height_270 = height[mask_270]
+
+    dmax_270 = np.zeros_like(H, dtype=float)
+    dmin_270 = np.zeros_like(H, dtype=float)
+    for i, h in enumerate(H):
+        dens_at_h_270 = dens_270[height_270 == h]
+        if len(dens_at_h_270) > 0:
+            dmax_270[i] = np.max(dens_at_h_270)
+            dmin_270[i] = np.min(dens_at_h_270)
+        else:
+            dmax_270[i] = np.nan
+            dmin_270[i] = np.nan
+
+    plt.figure(figsize=(12, 6))
+
+    plt.scatter(np.log10(density), height, color='r', s=5, label='Density range (all Ls)')
+
+    plt.plot(np.log10(dmax_all), H, 'k-', linewidth=3, label='Max density (all Ls)')
+    plt.plot(np.log10(dmin_all), H, 'b-', linewidth=3, label='Min density (all Ls)')
+
+    plt.plot(np.log10(dmax_270), H, 'k--', linewidth=3, label='Max density (Ls=270°)')
+    plt.plot(np.log10(dmin_270), H, 'b--', linewidth=3, label='Min density (Ls=270°)')
+
+    plt.xlabel('density (log10 kg/m³)')
+    plt.ylabel('height (km)')
     if year == 2:
-        plt.title("Worst-Case Mars Atmospheric Density vs Altitude\n(Ls = 270°, High Solar, TES Year 2)")
+        plt.title("Mars Atmospheric Density Envelope (TES Year 2)")
     elif year == 1:
-        plt.title("Worst-Case Mars Atmospheric Density vs Altitude\n(Ls = 270°, High Solar, TES Year 1)")
+        plt.title("Mars Atmospheric Density Envelope (TES Year 1)")
+    plt.legend()
     plt.grid(True)
-    plt.tight_layout()
     plt.show()
-
-    #df_max.to_csv("mars_density_highsolar_ls270.csv", index=False)
 
 plot_mars_density(year=2)
