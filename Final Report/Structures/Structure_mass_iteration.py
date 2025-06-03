@@ -2,7 +2,6 @@ import math
 from scipy.optimize import fsolve
 import numpy as np
 import matplotlib.pyplot as plt
-import sys 
 
 class Material: #add other properties such as cost or manufacturability 
     def __init__(self, E, rho, s_yld, s_ult, alpha=0.8, n=0.6, nu=0.334):
@@ -128,7 +127,7 @@ class Stringer:
 
 
 class Load_calculation:
-    def __init__(self, geometry, stringer, material, sc_mass,t):
+    def __init__(self, geometry, stringer, material, sc_mass, t):
         '''Initializes the Load_calculation class
         INPUTS:
             geometry: OBJECT -> geometry of the structure
@@ -178,14 +177,13 @@ class Load_calculation:
         #which is why there is a loop over n as well for each of the thicknee-dependent values 
         self.w_e = (self.geometry.t/2) * math.sqrt((4.0 * math.pi**2)/(12.0 * (1 - self.material.nu**2))) * math.sqrt(self.material.E/self.stringer.crip_stress)
             
-        print(f"w_e: {self.w_e}")
-
+        #print(f"w_e: {self.w_e}")
+        """ 
         for i in range(len(self.geometry.elements)):
             for n in range(len(self.geometry.t)):
                 if self.geometry.elements[i] < 2 * self.w_e[n] * (self.geometry.stringers[i]): #stringers array has n. of stringers per edge, so for each edge we check 
-                    print(f"Element {i} has too many stringers for thickness {self.geometry.t[n]}")
-                    sys.exit("Terminating program: Unfeasible stringer configuration.")
-
+                    #print(f"Element {i} has too many stringers for thickness {self.geometry.t[n]}")
+        """    
         self.element_empty_length = [] #calculates for each element, the empty parts without stringers, i.e., not just the total for each element, but the smaller parts within each element, i.e., unstiffened region between each stringer
         for i in range(len(self.geometry.elements)):
             self.element_empty_length.append((self.geometry.elements[i] - 2 * self.w_e * (self.geometry.stringers[i]))/(self.geometry.stringers[i]+1))
@@ -246,11 +244,11 @@ class Load_calculation:
         t_sreq_yld = self.peq_load / (2 * (self.geometry.elements[0] + self.geometry.elements[1]) * self.material.s_yld) * 1.1
 
         self.rigidity_t = max(t_Areq, t_Ireq, t_sreq_ult, t_sreq_yld)
-        print(t_Areq, t_Ireq, t_sreq_ult, t_sreq_yld, self.rigidity_t, self.geometry.elements[0], self.geometry.elements[1])
+        #print(t_Areq, t_Ireq, t_sreq_ult, t_sreq_yld, self.rigidity_t, self.geometry.elements[0], self.geometry.elements[1])
 
         return self.rigidity_t
 
-    def calculate_t_min(self, loadbearing, launchload, rigidity_t, min_realistic_t): 
+    def calculate_t_min(self, loadbearing, launchload, rigidity_t): 
         satisfying_t_indices_cr = np.where(loadbearing >= launchload)[0] #0 purely bc of syntax
 
         # minimum crippling thickness
@@ -259,93 +257,59 @@ class Load_calculation:
             #print("No thickness satisfies the load bearing requirement.")
             
         else:
-            min_t_crippling = t[satisfying_t_indices_cr[0]] #gets the minimum by accessing the first index of the possible ts
+            min_t_crippling = self.t[satisfying_t_indices_cr[0]] #gets the minimum by accessing the first index of the possible ts
             
         # minimum thickness crippling vs rigidity 
         min_t_overall = max(min_t_crippling, rigidity_t)
-
-        if min_t_overall > min_realistic_t: 
-            if min_t_overall == min_t_crippling: 
-                limiting_cr = 1
-            elif min_t_overall == rigidity_t: 
-                limiting_cr = 0 
-        
-        if min_t_overall < min_realistic_t: 
-            min_t_overall = min_realistic_t
+        if min_t_overall == min_t_crippling: 
+            limiting_cr = 1
+        elif min_t_overall == rigidity_t: 
             limiting_cr = 0 
-        
+            
+        return min_t_overall, limiting_cr, satisfying_t_indices_cr
 
-        return min_t_overall, limiting_cr, satisfying_t_indices_cr, min_t_crippling
 
+def calc_struct_mass(wet_mass, structural_setup):
+    # Default config or user config
+    x = structural_setup.get('x', [0, 1.45, 1.45, 0])
+    y = structural_setup.get('y', [0, 0, 1, 1])
+    stringers = structural_setup.get('stringers', [0, 0, 0, 0])
+    t = structural_setup.get('t', np.linspace(0.0001, 0.006, 50))
+    height = structural_setup.get('height', 4.5)
+    material = structural_setup.get('material', Material(E=70e9, rho=2800, s_yld=448e6, s_ult=524e6))
+    stringer = structural_setup.get('stringer', Stringer('hat', 0.0005, [0.01, 0.01, 0.01], material))
 
-if __name__ == "__main__":
-    ### INPUTS ###
-    x = [0, 1.45, 1.45, 0] #x-coordinates of the polygon points
-    y = [0, 0, 1, 1] #y-coordinates of the polygon points
-    stringers = [2, 2, 2, 2] #number of stringers per element
-    t = np.linspace(0.0001, 0.006, 50) #thickness (range) of the skin
-    sc_mass = 1063 #mass of the total wet spacecraft in kg
-    sc_height = 4.5 #height of the spacecraft in m
-    limiting_cr = 1
-    min_realistic_t = 0.0005
+    box = Polygon(height=height, px=x, py=y, stringers=stringers, thickness=t)
+    calc = Load_calculation(geometry=box, stringer=stringer, material=material, sc_mass=wet_mass, t=t)
 
-    ### CREATE OBJECTS ###
-    aluminium = Material(E=70e9, rho=2800, s_yld=448e6, s_ult=524e6) #based on aluminium 7075
-    hat_stringer = Stringer(type='hat', thickness=0.0005, lengths=[0.01, 0.01, 0.01], material=aluminium)
-    
-    box = Polygon(height=sc_height, px=x, py=y, stringers=stringers, thickness=t)
-    load_calc = Load_calculation(geometry=box, stringer=hat_stringer, material=aluminium, sc_mass=sc_mass, t=t)
-    launchload = load_calc.launcher_loading() #string 
-    loadbearing = load_calc.calculate_loads() #array 
-    rigidity_t = load_calc.calculate_area_inertia_thickness()
-    # rigidity_t = 0.01 - test
-    weight = load_calc.calculate_weight()
-    min_t_overall, limiting_cr, satisfying_t_indices_cr, min_t_crippling = load_calc.calculate_t_min(loadbearing, launchload, rigidity_t, min_realistic_t)
-    
-    if limiting_cr == 1: #crippling is limiting 
+    launchload = calc.launcher_loading()
+    loadbearing = calc.calculate_loads()
+    #rigidity_t = calc.calculate_area_inertia_thickness()
+    rigidity_t = 0.01
+    weight = calc.calculate_weight()
+    t_min, limiting_cr, satisfying_t_indices_cr = calc.calculate_t_min(loadbearing, launchload, rigidity_t)
+
+    if limiting_cr == 1:
         weight_t_min = weight[satisfying_t_indices_cr[0]]
+    else:
+        geom = Polygon(height=height, px=x, py=y, stringers=stringers, thickness=np.array([t_min]))
+        calc = Load_calculation(geometry=geom, stringer=stringer, material=material, sc_mass=wet_mass,t=t)
+        calc.launcher_loading()
+        calc.calculate_loads()
+        weight_t_min = calc.calculate_weight()[0]
 
-    if limiting_cr == 0: #rigidity/frequency consideration is limiting 
-        box = Polygon(height=sc_height, px=x, py=y, stringers=stringers, thickness=np.array([t_min]))
-        load_calc = Load_calculation(geometry=box, stringer=hat_stringer, material=aluminium, sc_mass=sc_mass, t=t)
+    return weight_t_min
 
-        # Recalculate load-bearing (needed to trigger internal area calculation)
-        load_calc.launcher_loading()
-        load_calc.calculate_loads()
-        weight_t_min = load_calc.calculate_weight()[0] 
-   
+# Optional for testing
+if __name__ == "__main__":
+    structural_mass = calc_struct_mass(wet_mass=1063, structural_setup={})
+    print(f"Structural mass: {structural_mass:.2f} kg")
 
 
-    print(f"Launch load: {launchload}")
-    print(f"Load bearing: {loadbearing}")
-    print(f"Rigidity (frequency) thickness: {rigidity_t}")
-    print(f"Minimum thickness for load-bearing: {min_t_crippling:.6f} m")
-    print(f"Minimum overall thickness: {min_t_overall:.6f} m")
-    print(f"Minimum corresponding mass: {weight_t_min:.6f} kg")
-   
 
-    
-    # Plot setup
-    fig, ax1 = plt.subplots()
 
-    # Plot load bearing on the left y-axis
-    ax1.plot(t, loadbearing, 'b-', label='Load Bearing')
-    ax1.set_xlabel('Thickness (t)')
-    ax1.set_ylabel('Load Bearing (N)', color='b')
-    ax1.tick_params(axis='y', labelcolor='b')
 
-    ax1.axhline(y=launchload, color='g', linestyle='--', label=f'Limit: {launchload} N')
 
-    # Create a second y-axis for mass
-    ax2 = ax1.twinx()
-    ax2.plot(t, weight, 'r-', label='Mass')
-    ax2.set_ylabel('Mass (kg)', color='r')
-    ax2.tick_params(axis='y', labelcolor='r')
 
-    # Add legends and grid
-    fig.tight_layout()
-    plt.title('Load Bearing and Mass vs. Thickness')
-    plt.grid(True)
-    plt.show()
 
-    
+
