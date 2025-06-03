@@ -39,6 +39,14 @@ def plot_mars_density(year=2):
         else:
             dmax_270[i] = np.nan
             dmin_270[i] = np.nan
+    
+    idx_210 = np.where(H == 210)
+
+    idx_215 = np.where(H == 215)
+
+    dmax_altitude_210 = dmax_all[idx_210]
+
+    dmax_altitude_215 = dmax_all[idx_215]
 
     plt.figure(figsize=(12, 6))
 
@@ -59,5 +67,7 @@ def plot_mars_density(year=2):
     plt.legend()
     plt.grid(True)
     plt.show()
+
+    return dmax_altitude_210, dmax_altitude_215
 
 plot_mars_density(year=2)
