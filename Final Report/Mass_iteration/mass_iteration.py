@@ -1,9 +1,10 @@
-import (...) as calc_struct_mass
+from Structures.Structure_mass_iteration import calc_struct_mass
+
 import (...) as calc_prop_mass
 
 """
-calc_struct_mass(wet_mass, structural_setup)
-    returns the structural mass
+Calculates the structural nass 
+    structural_mass = calc_struct_mass(wet_mass = 1063, structural_setup={})
 
 calc_prop_mass(dry_mass, Transfer_DeltaV, Onorbit_deltaV)
     returns the new propellant mass
