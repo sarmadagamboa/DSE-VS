@@ -9,7 +9,9 @@ def compute_atmospheric_drag(mars_altitude, spacecraft_velocity, spacecraft_mass
     spacecraft_velocity in km/s, converted inside.
     """
     velocity_m_s = spacecraft_velocity * 1000  # km/s to m/s
-    drag_force = 0.5 * atmospheric_density * velocity_m_s**2 * drag_coefficient * cross_sectional_area
+    # print(atmospheric_density)
+    drag_force = 0.5 * atmospheric_density* velocity_m_s**2 * drag_coefficient * cross_sectional_area
+    print(drag_force)
     deceleration = drag_force / spacecraft_mass  # m/s²
     delta_v_drag = deceleration * delta_t  # m/s over delta_t seconds
     return delta_v_drag
@@ -20,7 +22,7 @@ def plot_delta_v_vs_altitude(year=1, spacecraft_velocity=4.7, spacecraft_mass=85
     results = plot_mars_density(year)
     heights = results['height']
     densities = results['max_density']
-
+    # print(f"THIS IS THE DENSITY: {densities}")
     delta_vs = []
     for h, rho in zip(heights, densities):
         if np.isnan(rho):
@@ -38,7 +40,7 @@ def plot_delta_v_vs_altitude(year=1, spacecraft_velocity=4.7, spacecraft_mass=85
             delta_vs.append(delta_v)
 
     delta_vs = np.array(delta_vs)
-
+    # print(f"Delta V values: {delta_vs}")
     plt.figure(figsize=(8, 6))
     plt.plot(delta_vs, heights, marker='o')
     plt.xlabel('Delta V required due to drag (m/s)')
@@ -51,9 +53,9 @@ def plot_delta_v_vs_altitude(year=1, spacecraft_velocity=4.7, spacecraft_mass=85
 # Example usage:
 plot_delta_v_vs_altitude(
     year=1,
-    spacecraft_velocity=4.7,  # km/s example velocity
+    spacecraft_velocity=3.5,  # km/s example velocity
     spacecraft_mass=850,      # kg
     drag_coefficient=2.6,
     cross_sectional_area=1.45,  # m²
-    delta_t=3.3*365*24*3600                # seconds duration
+    delta_t=3.3*365*24*3600       # seconds duration
 )

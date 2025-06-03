@@ -12,7 +12,7 @@ def plot_mars_density(year=2):
     height = data[:, 1]
     density = data[:, 13]
 
-    H = np.arange(80, 245, 5)
+    H = np.arange(80, 300, 5)
 
     dmax_all = np.zeros_like(H, dtype=float)
     dmin_all = np.zeros_like(H, dtype=float)
