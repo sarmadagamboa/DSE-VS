@@ -5,9 +5,9 @@ import numpy as np
 Ixx = 274.8
 Iyy = 1882.4
 Izz = 1980.1
-Ixy = -289
-Ixz = -199.3
-Iyz = -64.2
+Ixy = 0 #-289
+Ixz = 0 #-199.3
+Iyz = 0 #-64.2
 
 # Initial angular velocity components in rad/s
 om_x = 0
@@ -15,12 +15,12 @@ om_y = -2*np.pi/(110*60)  # one full revolution over one orbit
 om_z = 0
 
 # Minimum torque bits for the control torque in Nm
-min_x_bit = 0.00001 # roughly the bits achieved by thrusters on GRACE
-min_y_bit = 0.00001
-min_z_bit = 0.00001
+min_x_bit = 0.00005 # roughly the bits achieved by thrusters on GRACE
+min_y_bit = 0.00005
+min_z_bit = 0.00005
 
-min_torque = -100
-max_torque = 100
+min_torque = -0.04
+max_torque = 0.04
 
 
 ##### Disturbance torque constants #####
