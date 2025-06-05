@@ -27,7 +27,7 @@ def calculate_total_cost(mass, payload_cost, trl_margin, cost_breakdown, dual_SC
 
 ## dry mass
 m_SST_LRI_ACC = 529
-m_SST_LRI_CAI = 656
+m_SST_LRI_CAI = 573.6
 m_QGG = 665
 m_DT = 440
 
