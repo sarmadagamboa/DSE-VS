@@ -5,7 +5,7 @@ from scipy.constants import G
 M_sun = 1.989e30  # Mass of the Sun in kg
 AU = 1.496e8  # Astronomical Unit in km
 
-def compute_transfer_time(distance_earth_probe):
+def compute_transfer_time():
     """
     Compute the time it takes for a spacecraft to cover a certain distance during the Mars Transfer Injection phase.
 
@@ -17,7 +17,6 @@ def compute_transfer_time(distance_earth_probe):
     time_to_transfer (float): The time to transfer from Earth to Mars using Hohmann transfer (in days).
     """
     # Convert distance to meters
-    distance_earth_probe_m = distance_earth_probe * 1e3  # in meters
     
     # Semi-major axis of the transfer orbit (average of Earth's and Mars' orbits)
     a_e = 1 * AU  # Earth orbital radius in km
@@ -96,11 +95,10 @@ def compute_time_to_distance(delta_v, distance_earth_probe, target_distance):
 
 # Example usage: Compute total transfer time and time to reach a specific distance
 
-delta_v_input = float(input("Enter the delta-v at launch (in km/s): "))  # Delta-v in km/s
-distance_earth_probe_input = float(input("Enter the distance from Earth to the spacecraft at the start (in km): "))  # Distance from Earth to spacecraft in km
+delta_v_input = float(input("Enter the delta-v at launch (in km/s): "))  # Delta-v in km/s# Distance from Earth to spacecraft in km
 
 # Total transfer time to Mars using Hohmann transfer
-transfer_time = compute_transfer_time(delta_v_input, distance_earth_probe_input)
+transfer_time = compute_transfer_time()
 print(f"Total transfer time from Earth to Mars: {transfer_time:.2f} days")
 
 # # Time to reach a specific distance during the MTI phase
