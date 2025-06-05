@@ -230,7 +230,7 @@ class Load_calculation:
             None
         '''
         
-        self.weight = self.total_area * self.material.rho
+        self.weight = self.total_area * self.material.rho * 2.5
 
         return self.weight
 
@@ -273,8 +273,8 @@ def calc_struct_mass(wet_mass, structural_setup):
     # Default config or user config
     x = structural_setup.get('x', [0, 1.45, 1.45, 0])
     y = structural_setup.get('y', [0, 0, 1, 1])
-    stringers = structural_setup.get('stringers', [0, 0, 0, 0])
-    t = structural_setup.get('t', np.linspace(0.0001, 0.006, 50))
+    stringers = structural_setup.get('stringers', [0, 2, 0, 2])
+    t = structural_setup.get('t', np.linspace(0.0025, 0.006, 50))
     height = structural_setup.get('height', 4.5)
     material = structural_setup.get('material', Material(E=70e9, rho=2800, s_yld=448e6, s_ult=524e6))
     stringer = structural_setup.get('stringer', Stringer('hat', 0.0005, [0.01, 0.01, 0.01], material))
@@ -284,8 +284,8 @@ def calc_struct_mass(wet_mass, structural_setup):
 
     launchload = calc.launcher_loading()
     loadbearing = calc.calculate_loads()
-    #rigidity_t = calc.calculate_area_inertia_thickness()
-    rigidity_t = 0.01
+    rigidity_t = calc.calculate_area_inertia_thickness()
+    #rigidity_t = 0.01
     weight = calc.calculate_weight()
     t_min, limiting_cr, satisfying_t_indices_cr = calc.calculate_t_min(loadbearing, launchload, rigidity_t)
 
