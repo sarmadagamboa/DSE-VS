@@ -3,9 +3,10 @@ from scipy.optimize import fsolve
 import numpy as np
 import matplotlib.pyplot as plt
 
-def calculate_r(): 
-    t = 0.0005
-    l0, l1, l2 = [0.01, 0.01, 0.01] # side flange, vertical web, top plate
+""" 
+def calculate_r(n_st, rho, height): 
+    t = 0.004
+    l0, l1, l2 = [0.03, 0.03, 0.03] # side flange, vertical web, top plate
 
     # Segment areas
     a_side = t * l0
@@ -38,15 +39,20 @@ def calculate_r():
 
     # Radius of gyration
     r_gyr = (I_total / A_total) ** 0.5
-    return r_gyr
+    weight = A_total * n_st * height * rho 
+    return r_gyr, A_total, weight 
   
 #hat stringer crippling stress: 
-stringer_stress = 221878525.32905626
+stringer_stress = 221878525.32905626 #not the dominating failure mode 
 height = 4.5
 E = 70e9
+rho = 2800
 yield_stress = 448e6
-r_gyr = calculate_r()
-
+n_st = 32
+r_gyr, A_total, weight = calculate_r(n_st, rho, height)
+# launch load to bear: 144 814
+# Euler capability with current stringer dimensions and for example 16 stringers: 71.93512616763553
+# failure in Euler buckling before yielding anyways since yielding way higher, need to check for that 
 lambda_vals = np.linspace(10, 1000, 1500)
 
 #current_slenderness_ratio = height/r_gyr #to use in loop 
@@ -67,13 +73,15 @@ sigma_euler = np.where(
     np.nan
 )
 
-#for plotting
+#for plotting, better to have fewer stringers and larger thickness 
 sigma_johnson_plot = stringer_stress*(1 - (stringer_stress * (lambda_vals)**2)/(4 * math.pi**2 * E) )
 sigma_johnson_plot[sigma_johnson_plot < 0] = np.nan
 sigma_euler_plot = np.pi**2 * E / (lambda_vals**2)
-print(np.pi**2 * E / ((height/r_gyr)**2)) 
+print("Euler limit load (must be greater than launch load:", (np.pi**2 * E / ((height/r_gyr)**2)) * A_total *n_st)
+print(weight)
 
-print(sigma_johnson_plot)
+
+#print(sigma_johnson_plot)
 # Plotting
 plt.figure(figsize=(10, 6))
 plt.plot(lambda_vals, sigma_johnson_plot / 1e6, label="Johnson's crippling stress", lw=2)
@@ -89,7 +97,6 @@ plt.tight_layout()
 plt.show()
 
 
-""" 
 #s_johnson_crippling = stringer_stress(1 - (stringer_stress * (height*r_gyr)**2)/(4 * math.pi()**2 * E) )
 #euler_buckling_yielding = math.pi()**2 * E * (r_gyr/height)**2
 critical_slenderness_ratio = math.sqrt(2 * math.pi**2 * E /stringer_stress) 
@@ -103,4 +110,9 @@ if current_slenderness_ratio > critical_slenderness_ratio:
     print("Euler buckling critical. Check against yielding.")
     #euler curve 
     #check against yielding 
-"""
+
+
+#147 k with 32 stringers and thickness = 0.004 , weight = 267.7
+#40 stringers and thickness 0.003 , weight = 244
+""" 
+

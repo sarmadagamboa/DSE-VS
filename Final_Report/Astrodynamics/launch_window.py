@@ -78,3 +78,4 @@ launch_windows = compute_launch_windows(start, S, T_earth, T_mars, ideal_phase, 
 print("\nLaunch windows (within ±1 degrees of ideal phase angle):")
 for win, phase in launch_windows:
     print(f"Date: {win.strftime('%Y-%m-%d')}, Phase angle: {phase:.2f}°")
+    print(f'Arrival Date: {(win + timedelta(days=258.88)).strftime("%Y-%m-%d")}, Phase angle: {true_phase_angle(S, T_earth, T_mars):.2f}°')
