@@ -19,8 +19,8 @@ min_x_bit = 0.00005 # roughly the bits achieved by thrusters on GRACE
 min_y_bit = 0.00005
 min_z_bit = 0.00005
 
-min_torque = -0.04
-max_torque = 0.04
+min_torque = -0.08
+max_torque = 0.08
 
 
 ##### Disturbance torque constants #####
