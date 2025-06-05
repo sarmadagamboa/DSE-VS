@@ -526,7 +526,7 @@ if __name__ == "__main__":
         
         t = np.linspace(material.min_realistic_t, 0.006, 50)
 
-        stringer_types = Stringer(type='hat', thickness=0.0005, lengths=[0.01,0.01,0.01], material=material, manuf_stringer = 0.7),
+        stringer_types = Stringer(type='hat', thickness= 0.004, lengths=[0.03,0.03,0.03], material=material, manuf_stringer = 0.7),
          
 
         for stringer in stringer_types: 

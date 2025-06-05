@@ -287,7 +287,7 @@ class Load_calculation:
         
         #print(p_ax,p_lat,(p_lat*l/2),p_eq/1.25,p_eq)
         self.peq_load = p_eq
-
+        print(p_eq)
         return self.peq_load
 
     def calculate_loads(self,kd_factor):
@@ -307,6 +307,7 @@ class Load_calculation:
         print("Crippling stress:", self.stringer.crip_stress)   
         #print(f"w_e: {self.w_e}")
 
+        """ 
         for i in range(len(self.geometry.elements)):
             for n in range(len(self.geometry.t)):
                 
@@ -317,7 +318,7 @@ class Load_calculation:
                     #print("ERROR:", self.geometry.t[n], self.geometry.elements[i], 2 * self.w_e[n] * (self.geometry.stringers[i]))
                     print(f"i={i}, material = {self.material.name}, thickness = {self.geometry.t[n]} element length={self.geometry.elements[i]:.4f}, stringers={self.geometry.stringers[i]}, w_e={self.w_e[n]:.4f}, required length={2*self.w_e[n]*self.geometry.stringers[i]:.4f}")
                     raise ValueError(f"Invalid configuration: Element {i} has too many stringers ({self.geometry.stringers[i]}) and we ({self.w_e[n]}) for thickness {self.geometry.t[n]:.6f} m")
- 
+        """
 
 
 
@@ -489,12 +490,12 @@ if __name__ == "__main__":
     #aluminium = Material(E=70e9, rho=2800, s_yld=448e6, s_ult=524e6) #based on aluminium 7075
     
     materials = [
-    Material(name="Aluminium 7075", E=70e9, rho=2800, s_yld=448e6, s_ult=524e6, cost_kg=5.0, manuf=0.9, alpha=0.8, n=0.6, nu=0.334, alpha_therm = 23.6e-6, min_realistic_t = 0.0025),  # Aluminium 7075
-    Material(name="Titanium Ti-6Al-4V", E=116e9, rho=4420, s_yld=880e6, s_ult=950e6, cost_kg=30.0, manuf=0.7, alpha=0.75, n=0.15, nu=0.34, alpha_therm = 8.6e-6, min_realistic_t = 0.0020),  # Titanium Ti-6Al-4V
-    Material(name="Stainless Steel", E=230e9, rho=7850, s_yld=250e6, s_ult=460e6, cost_kg=1.5, manuf=0.5, alpha=0.7, n=0.25, nu=0.3, alpha_therm = 17.2e-6, min_realistic_t = 0.0030),   # Stainless Steel
-    Material(name="CFRP", E=150e9, rho=1600, s_yld=800e6, s_ult=1100e6, cost_kg=90.0, manuf=0.4, alpha=0.6, n=0.05, nu=0.2, alpha_therm = 0.5e-6, min_realistic_t = 0.0015),  # CFRP
+    Material(name="Aluminium 7075", E=70e9, rho=2800, s_yld=448e6, s_ult=524e6, cost_kg=5.0, manuf=0.9, alpha=0.8, n=0.6, nu=0.334, alpha_therm = 23.6e-6, min_realistic_t = 0.0015),  # Aluminium 7075
     ]
-
+    #Material(name="Titanium Ti-6Al-4V", E=116e9, rho=4420, s_yld=880e6, s_ult=950e6, cost_kg=30.0, manuf=0.7, alpha=0.75, n=0.15, nu=0.34, alpha_therm = 8.6e-6, min_realistic_t = 0.0020),  # Titanium Ti-6Al-4V
+    #Material(name="Stainless Steel", E=230e9, rho=7850, s_yld=250e6, s_ult=460e6, cost_kg=1.5, manuf=0.5, alpha=0.7, n=0.25, nu=0.3, alpha_therm = 17.2e-6, min_realistic_t = 0.0030),   # Stainless Steel
+    #Material(name="CFRP", E=150e9, rho=1600, s_yld=800e6, s_ult=1100e6, cost_kg=90.0, manuf=0.4, alpha=0.6, n=0.05, nu=0.2, alpha_therm = 0.5e-6, min_realistic_t = 0.0015),  # CFRP
+    
 
 
     possible_configs = [] 
@@ -506,19 +507,19 @@ if __name__ == "__main__":
 
     for material in materials: 
         
-        t = np.linspace(material.min_realistic_t, 0.006, 50)
+        t = np.linspace(0.001, 0.0023, 100)
 
         stringer_types = [
-        Stringer(type='hat', thickness=0.0005, lengths=[0.01,0.01,0.01], material=material, manuf_stringer = 0.7),
-        Stringer(type='Z', thickness=0.0005, lengths=[0.01,0.01,0.01], material=material, manuf_stringer = 0.9),
-        Stringer(type='I', thickness=0.0005, lengths=[0.01,0.01], material=material, manuf_stringer = 1),
+        Stringer(type='hat', thickness=0.004, lengths=[0.03,0.03,0.03], material=material, manuf_stringer = 0.7),
+        #Stringer(type='Z', thickness=0.004, lengths=[0.03,0.03,0.03], material=material, manuf_stringer = 0.9),
+        #Stringer(type='I', thickness=0.004, lengths=[0.03,0.03], material=material, manuf_stringer = 1),
         ] 
 
         for stringer in stringer_types: 
             stringer_type_iter = stringer
-   
-            for s0 in range(0, 9, 2):
-                for s1 in range(0, 9, 2):
+    
+            for s0 in range(0, 13, 2): #13 
+                for s1 in range(0, 9, 2): #9 here for short side , fits for all thicknesses 
                     s2 = s0  # enforce symmetry
                     s3 = s1
                     stringers_iter = [s0, s1, s2, s3]
@@ -581,8 +582,8 @@ if __name__ == "__main__":
                     manuf_score = material.manuf * stringer_type_iter.manuf_stringer
 
                     # Weighted combined score
-                    score = (w_mass * inv_mass_score) + (w_cost * inv_cost_score) + (w_manuf * manuf_score)
-                
+                    #score = (w_mass * inv_mass_score) + (w_cost * inv_cost_score) + (w_manuf * manuf_score)
+                    scoe = 1/weight_t_min
 
                     possible_configs.append({
                         "material": material,
