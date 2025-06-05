@@ -11,6 +11,8 @@ d_MS = 228e6  # km
 d_ES = 149e6  # km
 mu_earth = (G * M_earth).to(u.km**3 / u.s**2).value
 mu_mars = (G * M_mars).to(u.km**3 / u.s**2).value
+print(np.sqrt(mu_mars/(188+R_mars.to(u.km).value)))
+print(np.sqrt(mu_earth/(660+R_mars.to(u.km).value)))
 r_earth = R_earth.to(u.km).value
 r_mars = R_mars.to(u.km).value
 

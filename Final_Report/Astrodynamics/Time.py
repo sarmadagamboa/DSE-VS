@@ -102,6 +102,6 @@ transfer_time = compute_transfer_time()
 print(f"Total transfer time from Earth to Mars: {transfer_time:.2f} days")
 
 # # Time to reach a specific distance during the MTI phase
-# target_distance_input = float(input("Enter the target distance from Earth to spacecraft (in km): "))
-# time_to_reach = compute_time_to_distance(delta_v_input, distance_earth_probe_input, target_distance_input)
-# print(f"Time to reach {target_distance_input} km: {time_to_reach:.2f} days")
+target_distance_input = float(input("Enter the target distance from Earth to spacecraft (in km): "))
+time_to_reach = compute_time_to_distance(delta_v_input, distance_earth_probe_input, target_distance_input)
+print(f"Time to reach {target_distance_input} km: {time_to_reach:.2f} days")
