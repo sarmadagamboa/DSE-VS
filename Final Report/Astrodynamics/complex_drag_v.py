@@ -10,7 +10,7 @@ def compute_atmospheric_drag(mars_altitude, spacecraft_velocity, spacecraft_mass
 
     spacecraft_velocity in km/s, converted inside.
     """
-    velocity_m_s = spacecraft_velocity * 1000  # km/s to m/s
+    velocity_m_s = spacecraft_velocity # km/s to m/s
     # print(atmospheric_density)
     drag_force = 0.5 * atmospheric_density* velocity_m_s**2 * drag_coefficient * cross_sectional_area
     #print(drag_force)
@@ -21,8 +21,24 @@ def compute_atmospheric_drag(mars_altitude, spacecraft_velocity, spacecraft_mass
     return delta_v_drag
 
 
-def plot_delta_v_vs_altitude(year=1, spacecraft_velocity=4.7, spacecraft_mass=850, drag_coefficient=2.6, cross_sectional_area=1.54, delta_t=3.3*365*24*3600):
+def plot_delta_v_vs_altitude(alt = 200, year=1, spacecraft_mass=850, drag_coefficient=2.6, cross_sectional_area=1.54, delta_t=3.3*365*24*3600):
     # Get heights and max densities from your function
+    R_mars = 3390e3
+    mu = 4.282837e13
+    results = plot_mars_density(year)
+    heights = results['height']
+    densities = results['max_density']
+
+    idx = np.abs(heights - alt).argmin()
+    closest_alt = heights[idx]
+    rho = densities[idx]
+    print(rho)
+    if np.isnan(rho):
+        raise ValueError(f"No atmospheric density data available for altitude {alt} km.")
+
+    r = R_mars +closest_alt*1000
+    v_orbit = np.sqrt(mu / r)
+    print(v_orbit)
     results = plot_mars_density(year)
     heights = results['height']
     densities = results['max_density']
@@ -34,7 +50,7 @@ def plot_delta_v_vs_altitude(year=1, spacecraft_velocity=4.7, spacecraft_mass=85
         else:
             delta_v = compute_atmospheric_drag(
                 mars_altitude=h,
-                spacecraft_velocity=spacecraft_velocity,
+                spacecraft_velocity=v_orbit,
                 spacecraft_mass=spacecraft_mass,
                 drag_coefficient=drag_coefficient,
                 cross_sectional_area=cross_sectional_area,
@@ -55,7 +71,7 @@ def plot_delta_v_vs_altitude(year=1, spacecraft_velocity=4.7, spacecraft_mass=85
     plt.show()
 
 
-def orbital_decay(alt, year= 1, spacecraft_velocity=4.7, spacecraft_mass=850, drag_coefficient=2.6, cross_sectional_area=1.54):
+def orbital_decay(alt, year= 2, spacecraft_mass=700, drag_coefficient=2.6, cross_sectional_area=1.54):
     """
     Calculate the orbital decay due to atmospheric drag over a specified time period.
     """
@@ -68,17 +84,15 @@ def orbital_decay(alt, year= 1, spacecraft_velocity=4.7, spacecraft_mass=850, dr
     densities = results['max_density']
 
     idx = np.abs(heights - alt).argmin()
-    print(idx)
     closest_alt = heights[idx]
-    print(closest_alt)
     rho = densities[idx]
     print(rho)
     if np.isnan(rho):
         raise ValueError(f"No atmospheric density data available for altitude {alt} km.")
 
     r = R_mars +closest_alt*1000
-    v_orbit = np.sqrt(mu / r)  # Orbital velocity in m/s
-    print(v_orbit)
+    v_orbit = np.sqrt(mu / r) 
+    print(v_orbit) # Orbital velocity in m/s
     drag_force = 0.5 * rho * v_orbit**2 * drag_coefficient * cross_sectional_area
     print(drag_force)
     s = 2*np.pi * r  # Circumference of the orbit
@@ -88,7 +102,7 @@ def orbital_decay(alt, year= 1, spacecraft_velocity=4.7, spacecraft_mass=850, dr
     r_final = -spacecraft_mass * mu / (2 * E_final)
     #print(r_final)  # New radius after decay
     delta_r = (-r+r_final)/1000
-    return delta_r *420
+    return delta_r 
 
 
 
@@ -98,20 +112,21 @@ def orbital_decay(alt, year= 1, spacecraft_velocity=4.7, spacecraft_mass=850, dr
 
 
 # Example usage:
+altitude = 188
 plot_delta_v_vs_altitude(
-    year=2,
-    spacecraft_velocity=3.5,  # km/s example velocity
-    spacecraft_mass=850,      # kg
+    alt = altitude,
+    year=2,# km/s example velocity
+    spacecraft_mass=700,      # kg
     drag_coefficient=2.6,
-    cross_sectional_area=1.45,  # m²
+    cross_sectional_area=1.54,  # m²
     delta_t=3.3*365*24*3600       # seconds duration
 )
 
-altitude = 212
+
 decay = orbital_decay(
     alt =altitude,
-    year=1,
-    spacecraft_mass=850,
+    year=2,
+    spacecraft_mass=700,
     drag_coefficient=2.6,
     cross_sectional_area=1.54
 )
