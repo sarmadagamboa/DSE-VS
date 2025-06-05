@@ -3,21 +3,21 @@ import math
 
 #constants
 G = 9.80665 #m/s^2
-m_dry = 638 #kg
+m_dry = 700 #kg
 
 # Mission parameters
 mission_duration = 4.5  # years
 t_transfer = 8  # months
-t_station = (mission_duration * 12 - t_transfer) * 30 * 24 * 60  # minutes
-t_capture = 15*24*60 # minutes #30 for biprop or monopropellant and 15*24*60 for biprop/electric
+t_station = 3.3*365*24*60  # minutes #3.3 years
+t_capture = 30 # minutes #30 for biprop or monopropellant and 15*24*60 for biprop/electric
 
 #SST LRI-ACC--> biprop
 #SST LRI-CAI and QGG --> biprop + electric
 #DT --> monopropellant
 
 #Delta-V requirements
-deltav_station = 270 #60 * (mission_duration - t_transfer/12) #m/s station keeping (60m/s per year): 2nd iteration: 270
-deltav_capture = 1249 #m/s capture (Assuming aerobreaking assist) --> second iteration: 1000 to 1249
+deltav_station = 410.5#60 * (mission_duration - t_transfer/12) #m/s station keeping (60m/s per year): 2nd iteration: 270
+deltav_capture = 1249  #m/s capture (Assuming aerobreaking assist) --> second iteration: 1000 to 1249
 
 class PropulsionProperties:
     #Option 1a - Electric Propulsion
@@ -30,7 +30,7 @@ class PropulsionProperties:
     }
     # Option 1b - Electric Propulsion
     ELECTRIC_SK = {'name': 'Solar Electric Propulsion',
-        'isp': 2000,  # specific impulse (s)
+        'isp': 1600,  # specific impulse (s)
         'eta': 0.7,  # efficiency
         'thruster_mass': 2,  # kg (BHT-6000 HIM of 300mN)
         'propellant_density': 1350,  # kg/m^3 (Xenon at room temp, high pressure)
@@ -252,7 +252,7 @@ def analyse_hybrid_option_biprop_coldgas():
         'propellant_mass': {
             'cold_gas': m_prop_stkeeping_coldgas,
             'biprop': m_prop_capture,
-            'total': m_prop_stkeeping_coldgas + m_prop_capture + fuel_mass + oxidizer_mass + pressurant_mass
+            'total': m_prop_stkeeping_coldgas + fuel_mass + oxidizer_mass + pressurant_mass
         },
         'tank_volumes':{
             'cold_gas': v_coldgas,
@@ -319,7 +319,6 @@ def analyse_hybrid_option_biprop_electric():
 
     return {
         'name': 'Bipropellant / Electric Hybrid',
-        'launch_mass': m_before_capture,
         'propellant_mass': {
             'electric': m_prop_stkeeping_electric,
             'biprop': m_prop_capture,
@@ -344,7 +343,9 @@ def analyse_hybrid_option_biprop_electric():
         'power_required': {
             'station_keeping': power_stkeeping
         },
-        'propulsion_system_mass': total_mass_propulsion
+        'propulsion_system_mass': total_mass_propulsion,
+        'electric_system_mass': electric_mass,
+        'biprop_system_mass': biprop_mass
     }
 
 def analyse_monoprop_option():
