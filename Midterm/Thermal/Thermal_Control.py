@@ -52,7 +52,7 @@ A_CAI = 0.52 * 0.52 * 6                           # CAI area [m²]
 A_ACC = 0.26 * 0.26 * 6                           # ACC area [m²]
 A_LRI = 0.40 * 0.40 * 2 + 0.40 * 0.20 * 4         # LRI area [m²]
 A_QGG = 0.5 * 0.5 * 2 + 0.5 * 1  * 4              # QGG area [m²]     
-A_PAYLOAD = A_ACC                         # Payload area [m²]
+A_PAYLOAD = A_CAI + A_LRI                         # Payload area [m²]
 U = 2.5                                           # Heater power [W/m²]
 T_PAYLOAD_AVG = (T_PAYLOAD[0] + T_PAYLOAD[1]) / 2 # Average payload temperature [°C]
 

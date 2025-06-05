@@ -27,5 +27,6 @@ dependencies:
   - beautifultable
   - tudatpy
   - pip
+  - skyfield
   - pip:
     - astroquery>=0.4.8.dev9306

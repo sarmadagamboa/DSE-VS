@@ -5,13 +5,15 @@ import matplotlib.cm as cm
 
 def plot_sst_qt():
     # Parameters
-    h = np.array([100000, 150000, 200000, 250000, 300000])  # satellite altitudes (m)
+    #h = np.array([100000, 150000, 200000, 250000, 300000])  # satellite altitudes (m)
+    h = np.array([153800,177000, 188000, 212000])
+
     R = 3.3895e6  # Mars radius (m)
     mu = 4.282837e13  # Mars gravitational parameter (m^3/s^2)
     r = R + h
     n = np.sqrt(mu / r**3)
 
-    d_fixed = 150000  # satellite separation (m) #220km GRACE-FO
+    d_fixed = 60000  # satellite separation (m) #220km GRACE-FO
     f = 1  # observation frequency (Hz)
 
     SOL_DURATION = 88775.244  # seconds in one Martian sol
@@ -229,6 +231,6 @@ def plot_sst_dist_satellites():
 
 
 plot_sst_qt()
-plot_sst_v3()
-plot_sst_dist_satellites()
+#plot_sst_v3()
+#plot_sst_dist_satellites()
 
