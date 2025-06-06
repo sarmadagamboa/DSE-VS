@@ -11,8 +11,7 @@ d_MS = 228e6  # km
 d_ES = 149e6  # km
 mu_earth = (G * M_earth).to(u.km**3 / u.s**2).value
 mu_mars = (G * M_mars).to(u.km**3 / u.s**2).value
-print(np.sqrt(mu_mars/(188+R_mars.to(u.km).value)))
-print(np.sqrt(mu_earth/(660+R_mars.to(u.km).value)))
+
 r_earth = R_earth.to(u.km).value
 r_mars = R_mars.to(u.km).value
 
@@ -415,7 +414,7 @@ def simulate_and_plot2():
 
 
 if __name__ == "__main__":
-    main(use_aerobraking=True, inclination_midcourse= True, leo_alt=200, mars_orbit_alt = 212, spacecraft_mass = 700, Cd = 2.6, cross_sectional_area = 2, delta_t = 3.3*365*24*3600)
+    main(use_aerobraking=True, inclination_midcourse= True, leo_alt=200, mars_orbit_alt = 212, spacecraft_mass = 700, Cd = 2.6, cross_sectional_area = 2, delta_t = 1.8*365*24*3600)
     main(use_aerobraking=False, inclination_midcourse= False, leo_alt=200, mars_orbit_alt = 212, spacecraft_mass = 700, Cd = 2.6, cross_sectional_area = 2, delta_t = 3.8*365*24*3600)
     main(use_aerobraking=True, inclination_midcourse= False, leo_alt=200, mars_orbit_alt = 212, spacecraft_mass = 700, Cd = 2.6, cross_sectional_area = 2, delta_t = 3.3*365*24*3600)
     main(use_aerobraking=False, inclination_midcourse= True, leo_alt=200, mars_orbit_alt = 212, spacecraft_mass = 700, Cd = 2.6, cross_sectional_area = 2, delta_t = 3.8*365*24*3600)
