@@ -8,15 +8,15 @@ m_dry = 700 #kg
 # Mission parameters
 mission_duration = 4.5  # years
 t_transfer = 8  # months
-t_station = 3.3*365*24*60  # minutes #3.3 years
-t_capture = 30 # minutes #30 for biprop or monopropellant and 15*24*60 for biprop/electric
+t_station = 60 #60  # minutes #3.3 years
+t_capture = 45 # minutes #30 for biprop or monopropellant and 15*24*60 for biprop/electric
 
 #SST LRI-ACC--> biprop
 #SST LRI-CAI and QGG --> biprop + electric
 #DT --> monopropellant
 
 #Delta-V requirements
-deltav_station = 410.5#60 * (mission_duration - t_transfer/12) #m/s station keeping (60m/s per year): 2nd iteration: 270
+deltav_station = 212#60 * (mission_duration - t_transfer/12) #m/s station keeping (60m/s per year): 2nd iteration: 270
 deltav_capture = 1249  #m/s capture (Assuming aerobreaking assist) --> second iteration: 1000 to 1249
 
 class PropulsionProperties:
@@ -50,10 +50,10 @@ class PropulsionProperties:
     #Option 3 - Hybrid Propulsion
     COLDGAS = {
         'name': 'Cold Gas',
-        'isp': 60,  # specific impulse for cold gas (s)
+        'isp': 300,  # specific impulse for cold gas (s)
         'thruster_mass': 0.1,  # kg
-        'propellant_density': 175,  # kg/m^3 (N2)
-        'feed_system_factor': 0.80,  # 20% mass for feed system
+        'propellant_density': 1200,  # kg/m^3 (N2)
+        'feed_system_factor':0.20,  # 20% mass for feed system
     }
 
     MONOPROP = {
@@ -389,4 +389,4 @@ def analyse_monoprop_option():
     }
 
 if __name__ == "__main__":
-    print(analyse_hybrid_option_biprop_electric())
+    print(analyse_hybrid_option_biprop_coldgas())

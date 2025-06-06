@@ -110,3 +110,10 @@ plt.grid(True, alpha=0.3)
 
 plt.tight_layout()
 plt.show()
+
+"""def mass_estimation(tank_mass):
+    volume_L = (tank_mass-10.408)/0.0334
+    volume = volume_L/1000
+    return volume
+
+print(mass_estimation(15))"""
