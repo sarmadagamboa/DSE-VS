@@ -1,6 +1,6 @@
-from "Final Report.Structures.Structure_mass_iteration" import calc_struct_mass
+from Final_Report.Structures.Structure_mass_iteration import calc_struct_mass
 
-from Final Report.Payload.payloadpointing import ... as calc_prop_mass ###THIS IS BULLSHIT
+from Final_Report. import ... as calc_prop_mass ###THIS IS BULLSHIT
 
 """
 Calculates the structural nass 
