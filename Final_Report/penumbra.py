@@ -4,7 +4,7 @@ import scipy.integrate as integrate
 Rm = 3389.500 #km
 Rs = 696340.000 #km
 dms = 2.28e8 #km
-h = 212.478 #km
+h = 188 #km
 
 i = 92.4432 #deg
 delta_mars = 25.2 #deg
@@ -33,6 +33,11 @@ print(f"The furthest dip into the penumbra is {distance_dip_in_penumbra} %, {np.
 print(f"a: {np.rad2deg(a)} deg")
 print(f"alpha: {np.rad2deg(alpha)} deg")
 print(f"theta: {np.rad2deg(theta)} deg")
+
+cosval_furthest = 1 - 4 * (alpha/2 + i_star - np.pi/2) / (alpha - theta)
+area_of_sun_covered_furthest = (2 * np.arccos(cosval_furthest) - np.sin(2 * np.arccos(cosval_furthest)))/ (2 * np.pi)
+print(f"Area of the sun covered in the furthest dip: {area_of_sun_covered_furthest}")
+
 
 ###integration
 #a_star = np.arange(a, 0, 0.001)
