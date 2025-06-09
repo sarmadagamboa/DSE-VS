@@ -47,6 +47,7 @@ def calc_drag_strategy(start_h, margin, mission_lifetime_years=1.9):
 
 start_h = 212.48 
 
+
 margins = np.linspace(0.01, 1.0, 50) 
 
 delta_v_list = []
