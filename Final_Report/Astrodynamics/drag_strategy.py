@@ -1,7 +1,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
 
-def calc_drag_strategy(start_h, margin):
+def calc_drag_strategy(start_h, margin, mission_lifetime_years=1.9):
     mu_mars = 42828.376645  # km^3 / s^2
     R_M = 3396.2  # km
     sol_minutes = 24.623 * 60  # min
@@ -24,11 +24,22 @@ def calc_drag_strategy(start_h, margin):
     total_minutes = num_orbits * period_minutes
     total_sols = total_minutes / sol_minutes
 
-    v_circ_max = np.sqrt(mu_mars / a_max)
     v_circ_min = np.sqrt(mu_mars / a_min)
-    delta_v = abs(v_circ_max - v_circ_min) * 1000  # m/s
+    v_circ_max = np.sqrt(mu_mars / a_max)
+    
+    v_transfer_periapsis = np.sqrt(mu_mars * (2 / a_min - 1 / ((a_min + a_max) / 2)))
+    v_transfer_apoapsis  = np.sqrt(mu_mars * (2 / a_max - 1 / ((a_min + a_max) / 2)))
 
-    return delta_v, total_sols
+    delta_v1 = v_transfer_periapsis - v_circ_min
+    delta_v2 = v_circ_max - v_transfer_apoapsis
+
+    delta_v_total = (delta_v1 + delta_v2) * 1000
+
+    mission_lifetime_sols = mission_lifetime_years * 365.25 / 1.0275
+    num_burns = mission_lifetime_sols / total_sols
+    lifetime_delta_v = delta_v_total * num_burns
+
+    return delta_v_total, total_sols, lifetime_delta_v
 
 start_h = 212.48 
 
@@ -38,9 +49,11 @@ delta_v_list = []
 time_sols_list = []
 
 for margin in margins:
-    delta_v, total_sols = calc_drag_strategy(start_h, margin)
+    delta_v, total_sols, lifetime_delta_v = calc_drag_strategy(start_h, margin)
     delta_v_list.append(delta_v)
     time_sols_list.append(total_sols)
+
+    print(f"Margin: {margin} km, Delta-V: {delta_v} m/s, Lifetime: {lifetime_delta_v} m/s \n")
 
 plt.figure(figsize=(10, 5))
 
