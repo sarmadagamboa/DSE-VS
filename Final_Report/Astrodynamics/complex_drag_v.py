@@ -112,7 +112,7 @@ def orbital_decay(alt, year= 2, spacecraft_mass=700, drag_coefficient=2.6, cross
 
 
 # Example usage:
-altitude = 212.48
+altitude = 100
 plot_delta_v_vs_altitude(
     alt = altitude,
     year=2,# km/s example velocity

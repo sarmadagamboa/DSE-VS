@@ -616,7 +616,7 @@ def structural_mass_wpanel(sc_mass, dim_height, dim_length, dim_width):
                     
                     
                     ##### finalise calculations
-                    weight_t_min = weight[min_t_ix] + 0.75 + 8.38 + whipple_mass(dim_width, dim_height) + 3.21 #ADCS plate + radiation shielding + MMOD protection + CAI vibration
+                    weight_t_min = weight[min_t_ix] + 0.75 + 8.38 + whipple_mass(dim_width, dim_height) + 3.21 + 10.9571826 #ADCS plate + radiation shielding + MMOD protection + CAI vibration + magnetic shielding
                     #weight_t_min = weight[min_t_ix] + 0.75 + 8.38 + 1.76 + 3.21 #ADCS plate + radiation shielding + MMOD protection + CAI vibration
                     #weight_t_min = weight[min_t_ix] #without additions: 113.77 kg, around 21.94 kg of stuff for now. 
                     cost = weight_t_min * material.cost_kg
