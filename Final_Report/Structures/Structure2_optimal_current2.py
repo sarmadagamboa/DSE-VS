@@ -2,6 +2,7 @@ import math
 from scipy.optimize import fsolve
 import numpy as np
 import matplotlib.pyplot as plt
+from test_johnson_2 import test_johnson_2f
 
 class Material: #add other properties such as cost or manufacturability 
     def __init__(self, name, E, rho, s_yld, s_ult, cost_kg, manuf, alpha, n, nu, alpha_therm, min_realistic_t):
@@ -436,7 +437,7 @@ class Load_calculation:
             #print("No thickness satisfies the load bearing requirement.")
             
         else:
-            min_t_crippling = t[satisfying_t_indices_cr[0]] #gets the minimum by accessing the first index of the possible ts
+            min_t_crippling = self.t[satisfying_t_indices_cr[0]] #gets the minimum by accessing the first index of the possible ts
             min_t_ix = satisfying_t_indices_cr[0]
         
         return min_t_crippling, min_t_ix
@@ -462,21 +463,18 @@ class Load_calculation:
         #then based on that calculate limit 
     
 
-if __name__ == "__main__":
+def structural_mass_wpanel(sc_mass): 
     ### INPUTS ###
     x = [0, 1.7, 1.7, 0] #x-coordinates of the polygon points
     y = [0, 0, 1.2, 1.2] #y-coordinates of the polygon points
     #stringers = [0, 0, 0, 0] #number of stringers per element
-    sc_mass = 1063 #mass of the total wet spacecraft in kg
-    sc_height = 3 #height of the spacecraft in m
+    #height of the spacecraft in m
     
-
     #introducing realism, change  
     kd_factor = 0.85 #knockdown factor 
     safety_mass_margin = 1.15 #for joints, discontinuities etc.
 
     #thermal stability inputs 
-    instrument_path = sc_height
     delta_T_max = 10
     max_shift = 1.5e-3
 
@@ -503,8 +501,9 @@ if __name__ == "__main__":
     frequency_fail_configs = [] 
     thermal_fail_configs = [] 
     
-    stringers_iterations_4 = [[2, 2, 2, 2]]                                                    
-
+    
+    stringers_iterations_4, sc_height = test_johnson_2f()                                            
+    instrument_path = sc_height
 
     for material in materials: 
         
@@ -577,8 +576,9 @@ if __name__ == "__main__":
                     
                     
                     ##### finalise calculations
-                    #weight_t_min = weight[min_t_ix]
+                    
                     weight_t_min = weight[min_t_ix] + 0.75 + 8.370000000000001 + 10.56 + 3.2082468 #ADCS plate + radiation shielding + MMOD protection + CAI vibration
+                    #weight_t_min = weight[min_t_ix] #without additions: 113.77 kg, around 21.94 kg of stuff for now. 
                     cost = weight_t_min * material.cost_kg
 
                     # Normalize individual metrics
@@ -634,13 +634,14 @@ if __name__ == "__main__":
         m = r["material"]
         print(f"Material Name={m.name}, E={m.E/1e9:.0f} GPa, Cost=${m.cost_kg}/kg, Manufacturability={m.manuf}")
         print(f"Stringers: {r['stringers']}, Stringer type: {r['stringer type']}, t_min: {r['t_min']:.4f} m, Mass: {r['mass']:.2f} kg, Cost: ${r['cost']:.2f}, Score: {r['score']:.2e}\n")
-        total_mass =r['mass']
+        best_tot_mass = r['mass']
 
     print("Stringer fail configs:", stringer_count_fail_configs) 
     print("Frequency fail configs:", frequency_fail_configs) 
     print("Thermal fail configs:", thermal_fail_configs) 
 
-    #Final mass 
+    return best_tot_mass
 
-    print("Final mass:", total_mass)
-    
+
+structural_mass = structural_mass_wpanel(sc_mass = 1063)
+print(structural_mass)
