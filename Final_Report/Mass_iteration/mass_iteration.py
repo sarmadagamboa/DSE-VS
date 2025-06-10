@@ -143,7 +143,7 @@ if __name__ == "__main__":
         "Electric_isp":1500,  # s
         "Electric_prop_margin": 0.20,
         "Electric_propellant_density": 1350,  # kg/m^3 (Xenon)
-        "Electric_tank_volume": 2 * 0.004,
+        "Electric_tank_volume": 2 * 0.005,
 
         "Biprop_isp": 321, # s
         "Biprop_prop_margin": 0.15,
