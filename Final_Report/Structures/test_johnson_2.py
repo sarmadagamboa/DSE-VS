@@ -69,10 +69,10 @@ def calculate_r_z(n_st, rho, height, t,l0, l1, l2):
     return r_gyr, A_total, weight
 
 
-def determine_stringer_Euler(E, rho, height):
+def determine_stringer_Euler(E, rho, height, launchload_johnson):
     # --- Constants ---
       # meters
-    launch_load = 144814  # Newtons
+    launch_load = launchload_johnson
     min_weight = np.inf
     best_config = None
     
@@ -146,14 +146,16 @@ def find_combinations(target_sum, num_digits):
 
 
 
-def test_johnson_2f(): 
+def test_johnson_2f(sc_height, launchload_johnson): 
     ####### MODIFY INPUTS 
     E = 70e9
     rho = 2800
-    height = 3
+    height = sc_height
+    #width = dim_width
+    #length = dim_length
 
-    best_config = determine_stringer_Euler(E, rho, height) #material and height fixed 
-    target_sum = (best_config["n_st"])
+    best_config = determine_stringer_Euler(E, rho, height, launchload_johnson) #material and height fixed #
+    target_sum, l0_st, l1_st, l2_st, t_st= (best_config["n_st"], best_config["l0"], best_config["l1"], best_config["l2"], best_config["Thickness of stringer"])
     num_digits = 4
     configs = find_combinations(target_sum, num_digits)
 
@@ -161,9 +163,9 @@ def test_johnson_2f():
     #for config in configs:
         #print(config)
     
-    return configs, height 
+    return configs, l0_st, l1_st, l2_st, t_st
 #determine_stringer_Euler()
 
-configs, height = test_johnson_2f()
-print(configs)
+#configs, l0_st, l1_st, l2_st, t_st = test_johnson_2f(sc_height = 3, launchload_johnson = 100382.74613026081)
+#print(configs)
         
