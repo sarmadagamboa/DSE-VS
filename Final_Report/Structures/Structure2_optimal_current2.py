@@ -2,7 +2,20 @@ import math
 from scipy.optimize import fsolve
 import numpy as np
 import matplotlib.pyplot as plt
+###ADDED BY LASZLO###
+import sys
+import os
+
+# Get the directory of the current script (Structure2_optimal_current2.py)
+current_dir = os.path.dirname(os.path.abspath(__file__))
+
+# Add the directory containing test_johnson_2.py to sys.path
+# If test_johnson_2.py is in the same directory:
+sys.path.append(current_dir)
+###END OF ADDED BY LASZLO###
+
 from test_johnson_2 import test_johnson_2f
+from whipple_shield import * 
 
 class Material: #add other properties such as cost or manufacturability 
     def __init__(self, name, E, rho, s_yld, s_ult, cost_kg, manuf, alpha, n, nu, alpha_therm, min_realistic_t):
@@ -461,15 +474,32 @@ class Load_calculation:
         euler_buckling_yielding = math.pi()**2 * self.material.E * (self.stringer.r_gyr/self.geometry.height)**2
         critical_slenderness_ratio = math.sqrt(2 * math.pi()**2 * self.material.E /self.stringer.stringer_stress) 
         #then based on that calculate limit 
-    
 
-def structural_mass_wpanel(sc_mass): 
+"""   
+def launcher_loading_noclass(fnat_ax=20, fnat_lat=6, maxg_ax = 6, maxg_lat = 2, sc_mass, dim_height, ):
+    p_ax = maxg_ax  * sc_mass * 9.81
+    p_lat =  maxg_lat * sc_mass * 9.81
+
+    # CHANGE 
+    p_eq = (p_ax + 2*(p_lat*dim_height/2)/self.geometry.max_diag) *1.25 #will be checked against both buckling and yield/ultimate strength
+    ## TODO!!! 1.414 value above must be switched to half of the longest diagonal of the polygon
+    
+    #print(p_ax,p_lat,(p_lat*l/2),p_eq/1.25,p_eq)
+    self.peq_load = p_eq
+    print(p_eq)
+    return self.peq_load
+
+""" 
+
+def structural_mass_wpanel(sc_mass, dim_height, dim_length, dim_width): 
     ### INPUTS ###
-    x = [0, 1.7, 1.7, 0] #x-coordinates of the polygon points
-    y = [0, 0, 1.2, 1.2] #y-coordinates of the polygon points
+
+    x = [0, dim_width, dim_width, 0] #x-coordinates of the polygon points
+    y = [0, 0, dim_length, dim_length] #y-coordinates of the polygon points
     #stringers = [0, 0, 0, 0] #number of stringers per element
     #height of the spacecraft in m
-    
+    sc_height = dim_height 
+
     #introducing realism, change  
     kd_factor = 0.85 #knockdown factor 
     safety_mass_margin = 1.15 #for joints, discontinuities etc.
@@ -494,6 +524,11 @@ def structural_mass_wpanel(sc_mass):
     #Material(name="Stainless Steel", E=230e9, rho=7850, s_yld=250e6, s_ult=460e6, cost_kg=1.5, manuf=0.5, alpha=0.7, n=0.25, nu=0.3, alpha_therm = 17.2e-6, min_realistic_t = 0.0030),   # Stainless Steel
     #Material(name="CFRP", E=150e9, rho=1600, s_yld=800e6, s_ult=1100e6, cost_kg=90.0, manuf=0.4, alpha=0.6, n=0.05, nu=0.2, alpha_therm = 0.5e-6, min_realistic_t = 0.0015),  # CFRP
     
+    stringer_types = [
+        #Stringer(type='hat', thickness=0.005, lengths=[0.03,0.03,0.03], material=material, manuf_stringer = 0.7),
+        Stringer(type='Z', thickness=0.005, lengths=[0.03, 0.03, 0.03], material=materials[0], manuf_stringer = 0.9),
+        #Stringer(type='I', thickness=0.006, lengths=[0.03,0.03], material=material, manuf_stringer = 1),
+        ] 
 
 
     possible_configs = [] 
@@ -501,8 +536,12 @@ def structural_mass_wpanel(sc_mass):
     frequency_fail_configs = [] 
     thermal_fail_configs = [] 
     
-    
-    stringers_iterations_4, sc_height = test_johnson_2f()                                            
+    t = 0.0015
+    box = Polygon(height=sc_height, px=x, py=y, stringers=[0,0,0,0], thickness=t)
+    load_calc = Load_calculation(geometry=box, stringer=stringer_types[0], material=materials[0], sc_mass=sc_mass, t=t)
+                    
+    launchload_johnson = load_calc.launcher_loading() #string 
+    stringers_iterations_4, l0_st, l1_st, l2_st, t_st = test_johnson_2f(sc_height, launchload_johnson)                                            
     instrument_path = sc_height
 
     for material in materials: 
@@ -511,9 +550,10 @@ def structural_mass_wpanel(sc_mass):
 
         stringer_types = [
         #Stringer(type='hat', thickness=0.005, lengths=[0.03,0.03,0.03], material=material, manuf_stringer = 0.7),
-        Stringer(type='Z', thickness=0.0028, lengths=[0.05,0.05,0.05], material=material, manuf_stringer = 0.9),
+        Stringer(type='Z', thickness=t_st, lengths=[l0_st, l1_st, l2_st], material=material, manuf_stringer = 0.9),
         #Stringer(type='I', thickness=0.006, lengths=[0.03,0.03], material=material, manuf_stringer = 1),
         ] 
+
 
 
         for stringer in stringer_types: 
@@ -576,8 +616,8 @@ def structural_mass_wpanel(sc_mass):
                     
                     
                     ##### finalise calculations
-                    
-                    weight_t_min = weight[min_t_ix] + 0.75 + 8.370000000000001 + 10.56 + 3.2082468 #ADCS plate + radiation shielding + MMOD protection + CAI vibration
+                    weight_t_min = weight[min_t_ix] + 0.75 + 8.38 + whipple_mass(dim_width, dim_height) + 3.21 #ADCS plate + radiation shielding + MMOD protection + CAI vibration
+                    #weight_t_min = weight[min_t_ix] + 0.75 + 8.38 + 1.76 + 3.21 #ADCS plate + radiation shielding + MMOD protection + CAI vibration
                     #weight_t_min = weight[min_t_ix] #without additions: 113.77 kg, around 21.94 kg of stuff for now. 
                     cost = weight_t_min * material.cost_kg
 
@@ -633,15 +673,17 @@ def structural_mass_wpanel(sc_mass):
     for r in possible_configs[:5]: #get first top configs 
         m = r["material"]
         print(f"Material Name={m.name}, E={m.E/1e9:.0f} GPa, Cost=${m.cost_kg}/kg, Manufacturability={m.manuf}")
-        print(f"Stringers: {r['stringers']}, Stringer type: {r['stringer type']}, t_min: {r['t_min']:.4f} m, Mass: {r['mass']:.2f} kg, Cost: ${r['cost']:.2f}, Score: {r['score']:.2e}\n")
+        print(f"Stringers: {r['stringers']}, Stringer type: {r['stringer type']}, t_min: {r['t_min']:.4f} m, Mass: {r['mass']:.2f} kg, Cost: ${r['cost']:.2f}, Score: {r['score']:.2e}")
+        print(f"Stringer lengths: {l0_st, l1_st, l2_st}m, Stringer thickness: {t_st}m, Launch load: {launchload_johnson}N \n")
         best_tot_mass = r['mass']
 
     print("Stringer fail configs:", stringer_count_fail_configs) 
     print("Frequency fail configs:", frequency_fail_configs) 
     print("Thermal fail configs:", thermal_fail_configs) 
 
-    return best_tot_mass
+    return best_tot_mass, dim_height, dim_length, dim_width, sc_mass
 
 
-structural_mass = structural_mass_wpanel(sc_mass = 1063)
+structural_mass = structural_mass_wpanel(sc_mass = 933.51, dim_height = 3, dim_length = 1.2, dim_width = 1.7)
 print(structural_mass)
+
