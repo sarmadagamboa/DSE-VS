@@ -1,10 +1,11 @@
 import math
 from scipy.optimize import fsolve
+from itertools import product 
 import numpy as np
 import matplotlib.pyplot as plt
 
 class Material: #add other properties such as cost or manufacturability 
-    def __init__(self, E, rho, s_yld, s_ult, alpha=0.8, n=0.6, nu=0.334):
+    def __init__(self, E, rho, s_yld, s_ult, alpha, n, nu, cost, manuf):
         '''Initializes the Material class
         INPUTS:
             E: FLOAT -> Young's modulus in Pa
@@ -23,6 +24,8 @@ class Material: #add other properties such as cost or manufacturability
         self.alpha = alpha
         self.n = n
         self.nu = nu
+        self.cost = cost 
+        self.manuf = manuf
 
 class Polygon: #polygon-shaped cross-section of structural member
     def __init__(self, height, px, py, stringers, thickness):
@@ -89,8 +92,10 @@ class Stringer:
         if self.type == 'hat':
             self.hat_area()
             self.hat_stress()
-
-            #add other types 
+        elif self.type == 'Z':
+            self.z_area()
+            self.z_stress()
+        #add other types 
     
     def hat_stress(self): #fraction formulae here 
         s_side_r = self.material.alpha * ((0.423/self.material.s_yld) * (math.pi**2 * self.material.E)/(12 * (1- self.material.nu**2))
@@ -124,6 +129,20 @@ class Stringer:
 
     def hat_area(self): #sides and corners 
         self.area = (2 * self.lengths[0] + 2 * self.lengths[1] + self.lengths[2]) * self.t + 4 * self.t**2
+
+    def z_stress(self):
+        t, l0, l1 = self.t, *self.lengths
+        E, nu, alpha, n, s_yld = self.material.E, self.material.nu, self.material.alpha, self.material.n, self.material.s_yld
+        def crippling(l):
+            return alpha * ((4/E * (math.pi**2 * E) / (12 * (1 - nu**2)) * (t/l)**2)**(1-n)) * s_yld
+        s_flange = min(s_yld, crippling(l0))
+        s_web = min(s_yld, crippling(l1))
+        a_flange = t * l0 * 2
+        a_web = t * l1
+        self.crip_stress = (s_flange * a_flange + s_web * a_web) / (a_flange + a_web)
+
+    def z_area(self):
+        self.area = (2 * self.lengths[0] + self.lengths[1]) * self.t + 2 * self.t**2
 
 
 class Load_calculation:
@@ -247,6 +266,12 @@ class Load_calculation:
 
         return self.rigidity_t
 
+    
+
+    def evaluate_structure(self):
+        weight = self.calculate_weight()
+        margin = self.stringer.crip_stress / self.peq_load
+        return {'weight': weight, 'margin': margin, 'valid': margin >= 1.0}
 
 
 if __name__ == "__main__":
@@ -257,16 +282,27 @@ if __name__ == "__main__":
     t = np.linspace(0.0001, 0.006, 50) #thickness (range) of the skin
     sc_mass = 1063 #mass of the total wet spacecraft in kg
     sc_height = 4.5 #height of the spacecraft in m
-    
-    ### CREATE OBJECTS ###
-    aluminium = Material(E=70e9, rho=2800, s_yld=448e6, s_ult=524e6) #based on aluminium 7075
-    hat_stringer = Stringer(type='hat', thickness=0.0005, lengths=[0.01, 0.01, 0.01], material=aluminium)
+    str_type = ['hat']
+
+    ###### CREATE OBJECTS #####
+    # MATERIAL ITERATION for now just iterating through materials 
+    aluminium = Material("Al7075", 70e9, 2800, 448e6, 524e6, cost=1.0, manufacturability=0.9)
+    titanium = Material("Ti6Al4V", 113.8e9, 4430, 880e6, 950e6, cost=1.8, manufacturability=0.6)
+    cfrp = Material("CFRP", 130e9, 1600, 600e6, 800e6, alpha=0.6, n=0.55, nu=0.3, cost=2.2, manufacturability=0.7)
+    materials = [aluminium, titanium, cfrp]
+
+    # STRINGER ITERATION , will then iterate through stringer properties 
+    hat_stringer = Stringer(type=str_type, thickness=0.0005, lengths=[0.01, 0.01, 0.01], material=aluminium)
+
+    # SHAPE ITERATION 
     box = Polygon(height=sc_height, px=x, py=y, stringers=stringers, thickness=t)
+
     load_calc = Load_calculation(geometry=box, stringer=hat_stringer, material=aluminium, sc_mass=sc_mass)
 
     #load_calc.launcher_loading()
     launchload = load_calc.launcher_loading()
     loadbearing = load_calc.calculate_loads()
+
     weight = load_calc.calculate_weight()
     rigidity_t = load_calc.calculate_area_inertia_thickness()
 
@@ -314,8 +350,50 @@ if __name__ == "__main__":
         
         print(f"Minimum corresponding mass FOR LOAD BEARING ONLY (not rigidity): {weight_min_t_bearing:.6f} kg")
     
+    
+    best_config = None
+    best_score = float('inf')
 
+    #for "iteration names" in "actual code array names"
+    for (mat_skin, t_skin, typ) in product(materials, t, str_type): 
+        stringer = Stringer(type=typ, thickness=0.0005, lengths=[0.01, 0.01, 0.01], material=mat_skin)
+        box = Polygon(height=sc_height, px=x, py=y, stringers=stringers, thickness=t_skin)
+        load_calc = Load_calculation(geometry=box, stringer=stringer, material=mat_skin, sc_mass=sc_mass)
+        result = load_calc.evaluate_structure()
 
+        score = result['weight'] * mat_skin.manufacturability + mat_str.cost
+        if result['valid'] and score < best_score:
+            best_score = score
+            best_config = (mat_skin.name, mat_str.name, t_s, t_str, typ, stringer.area, result['margin'], result['weight'])
 
+    print(f"Best configuration:\n Skin Material: {best_config[0]}\n Stringer Material: {best_config[1]}\n Skin Thickness: {best_config[2]:.6f} m\n Stringer Thickness: {best_config[3]:.6f} m\n Type: {best_config[4]}\n Stringer Area: {best_config[5]:.6e} m^2\n Margin: {best_config[6]:.2f}\n Total Mass: {best_config[7]:.2f} kg")
+    
 
-        
+    """ 
+    stringer_thicknesses = [0.0003, 0.0005]
+    stringer_counts = [[2, 2, 2, 2]]
+    types = ['hat', 'Z']
+
+    stringer_lengths = {
+        'hat': [[0.01, 0.01, 0.01]],
+        'Z': [[0.015, 0.01]]
+    }
+
+    best_config = None
+    best_score = float('inf')
+
+    for (mat_skin, mat_str, t_s, t_str, typ) in product(materials, materials, t_skin, stringer_thicknesses, types):
+        for sl in stringer_lengths[typ]:
+            for sc in stringer_counts:
+                stringer = Stringer(type=typ, thickness=t_str, lengths=sl, material=mat_str)
+                box = Polygon(height=sc_height, px=x, py=y, stringers=sc, thickness=[t_s]*4)
+                calc = Load_calculation(geometry=box, stringer=stringer, material=mat_skin, sc_mass=sc_mass)
+                result = calc.evaluate_structure()
+
+                score = result['weight'] * mat_skin.manufacturability + mat_str.cost
+                if result['valid'] and score < best_score:
+                    best_score = score
+                    best_config = (mat_skin.name, mat_str.name, t_s, t_str, typ, stringer.area, result['margin'], result['weight'])
+
+    print(f"Best configuration:\n Skin Material: {best_config[0]}\n Stringer Material: {best_config[1]}\n Skin Thickness: {best_config[2]:.6f} m\n Stringer Thickness: {best_config[3]:.6f} m\n Type: {best_config[4]}\n Stringer Area: {best_config[5]:.6e} m^2\n Margin: {best_config[6]:.2f}\n Total Mass: {best_config[7]:.2f} kg")
+    """

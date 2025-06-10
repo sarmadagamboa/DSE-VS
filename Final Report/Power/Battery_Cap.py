@@ -1,7 +1,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
 
-# === Parameters ===
+#Parameters
 battery_capacity_Wh = 1477   # Wh
 initial_soc = 1            
 
@@ -28,12 +28,10 @@ t = np.arange(0, total_sim_hours * 3600, dt)
 net_power = np.zeros_like(t, dtype=float)
 for i, tt in enumerate(t):
     sec_in_orbit = tt % orbital_period_s
-    # Charge during sunlight, discharge during eclipse
     if sec_in_orbit < sunlit_fraction * orbital_period_s:
         net_power[i] = P_gen - P_draw_sun
     else:
         net_power[i] = -P_draw_ecl
-    # Add peak draw
     if (tt % peak_period_s) < peak_event_duration:
         net_power[i] -= peak_extra_W
 
