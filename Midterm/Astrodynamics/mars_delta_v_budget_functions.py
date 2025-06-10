@@ -51,6 +51,7 @@ def compute_dir_tranfer_injection(r_earth, mars_orbit_radius):
 def compute_capture_orbit(mars_orbit_radius):
     e_mars = 0.8537
     a_mars = mars_orbit_radius / (1 - e_mars)
+    print(a_mars)
     r_apo_mars = 2 * a_mars - mars_orbit_radius
     v_mars_apo = np.sqrt(mu_mars * (-1 / a_mars + 2 / r_apo_mars))
     v_mars_per = np.sqrt(mu_mars * (-1 / a_mars + 2 / mars_orbit_radius))
