@@ -1,6 +1,6 @@
-from Final_Report.Structures.Structure2_optimal_current2 import *
+from Final_Report.Structures.Structure2_optimal_current2 import structural_mass_wpanel as calc_struct_mass
+import matplotlib.pyplot as plt
 
-from Final_Report. import ... as calc_prop_mass ###THIS IS BULLSHIT
 import math
 g = 9.80665
 """
@@ -12,42 +12,45 @@ calc_prop_mass(dry_mass, Transfer_DeltaV, Onorbit_deltaV)
     returns the new propellant mass
 """
 
+"""
+calc_struct_mass(wet_mass, structural_setup)
+    returns the structural mass
+"""
 
-def calculate_wet_mass(inputs, dry_mass_margin=1.1):
-
-    m_beforesk = dry_mass * math.exp(inputs["Onorbit_DeltaV"] / (inputs["Electric_isp"]["Propulsion setup"] * g))
+def calc_prop_mass(dry_mass, inputs):
+    m_beforesk = dry_mass * math.exp(inputs["Onorbit_DeltaV"] / (inputs["Propulsion setup"]["Electric_isp"] * g))
     m_prop_electric_nomargin = m_beforesk - dry_mass
-    m_prop_stkeeping_electric = m_prop_electric_nomargin * (1 + inputs["Electric_prop_margin"]["Propulsion setup"])
+    m_prop_stkeeping_electric = m_prop_electric_nomargin * (1 + inputs["Propulsion setup"]["Electric_prop_margin"])
 
-    m_beforecapture = m_beforesk * math.exp(inputs["Insertion_DeltaV"] / (inputs["Biprop_isp"]["Propulsion setup"] * g))
+    m_beforecapture = m_beforesk * math.exp(inputs["Insertion_DeltaV"] / (inputs["Propulsion setup"]["Biprop_isp"] * g))
     m_prop_capture_nomargin = m_beforecapture - m_beforesk
-    m_prop_capture_biprop =  m_prop_capture_nomargin*(1+inputs["Biprop_prop_margin"]["Propulsion setup"])
+    m_prop_capture_biprop =  m_prop_capture_nomargin*(1+inputs["Propulsion setup"]["Biprop_prop_margin"])
 
-    fuel_mass = m_prop_capture_biprop / (1 + inputs["Ox_fuel_ratio"]["Propulsion setup"])
-    oxidiser_mass = inputs["Ox_fuel_ratio"]["Propulsion setup"] * fuel_mass
+    fuel_mass = m_prop_capture_biprop / (1 + inputs["Propulsion setup"]["Ox_fuel_ratio"])
+    oxidiser_mass = inputs["Propulsion setup"]["Ox_fuel_ratio"] * fuel_mass
 
-    v_fuel_required = fuel_mass/inputs["Fuel_density"]["Propulsion setup"]
-    v_oxidizer_required = oxidiser_mass /inputs["Oxidizer_density"]["Propulsion setup"]
+    v_fuel_required = fuel_mass/inputs["Propulsion setup"]["Fuel_density"]
+    v_oxidizer_required = oxidiser_mass /inputs["Propulsion setup"]["Oxidizer_density"]
     v_prop_biprop = v_fuel_required + v_oxidizer_required
 
-    M_press = inputs["final_press"]["Propulsion setup"] * v_prop_biprop / (inputs['gas_const']["Propulsion setup"]* inputs['storage_press']["Propulsion setup"])
-    v_press = M_press * inputs['gas_const']["Propulsion setup"] * inputs['storage_temp']["Propulsion setup"] / inputs['storage_press']["Propulsion setup"]
+    M_press = inputs["Propulsion setup"]["final_press"] * v_prop_biprop / (inputs["Propulsion setup"]['gas_const']* inputs["Propulsion setup"]['storage_press'])
+    v_press = M_press * inputs["Propulsion setup"]['gas_const'] * inputs["Propulsion setup"]['storage_temp'] / inputs["Propulsion setup"]['storage_press']
 
     # Check tank capacities
     # Electric propellant check
-    max_electric_prop = inputs["Electric_tank_volume"]["Propulsion setup"] * inputs["Electric_propellant_density"]["Propulsion setup"]
+    max_electric_prop = inputs["Propulsion setup"]["Electric_tank_volume"] * inputs["Propulsion setup"]["Electric_propellant_density"]
     electric_fits = m_prop_stkeeping_electric <= max_electric_prop
 
     # Fuel tank check
-    max_fuel_capacity = inputs["Fuel_tank_volume"]["Propulsion setup"]
+    max_fuel_capacity = inputs["Propulsion setup"]["Fuel_tank_volume"]
     fuel_fits = v_fuel_required <= max_fuel_capacity
 
     # Oxidizer tank check
-    max_oxidizer_capacity = inputs["Oxidizer_tank_volume"]["Propulsion setup"]
+    max_oxidizer_capacity = inputs["Propulsion setup"]["Oxidizer_tank_volume"]
     oxidizer_fits = v_oxidizer_required <= max_oxidizer_capacity
 
     # Pressurant tank check
-    max_pressurant_capacity = inputs["Pressurant_tank_volume"]["Propulsion setup"]
+    max_pressurant_capacity = inputs["Propulsion setup"]["Pressurant_tank_volume"]
     pressurant_fits = (v_press <= max_pressurant_capacity)
 
     all_tanks_fit = electric_fits and fuel_fits and oxidizer_fits and pressurant_fits
@@ -61,6 +64,9 @@ def calculate_wet_mass(inputs, dry_mass_margin=1.1):
         return None
 
 
+
+def calculate_wet_mass(inputs, dry_mass_margin=1.1):
+    print(inputs["mass"]["Propellant_mass"])
     return sum(value for key, value in inputs["mass"].items() if key != "Propellant_mass") * dry_mass_margin + inputs["mass"]["Propellant_mass"]
 
 
@@ -71,6 +77,9 @@ def calculate_dry_mass(inputs, dry_mass_margin=1.1):
 def iteration_loop(inputs, dry_mass_margin=1.1, values_close_percent=0.5):
     """Iterate until the wet mass converges to a stable value.
     """
+
+    dim_height, dim_length, dim_width = inputs["Structural setup"]['dim_height'], inputs["Structural setup"]['dim_length'], inputs["Structural setup"]['dim_width']
+
     prop_mass_evolution = []
     wet_mass_evolution = []
 
@@ -78,11 +87,11 @@ def iteration_loop(inputs, dry_mass_margin=1.1, values_close_percent=0.5):
     print(inputs["wet_mass_guess"])
 
     wet_mass_evolution.append(inputs["wet_mass_guess"])
-    prop_mass_evolution.append(inputs["propellant_mass_guess"])
+    prop_mass_evolution.append(inputs["Propellant_mass_guess"])
 
-    inputs["mass"]["Structural_mass"] = calc_struct_mass(inputs["wet_mass_guess"], inputs["Structural setup"])
+    inputs["mass"]["Structural_mass"] = calc_struct_mass(inputs["wet_mass_guess"], dim_height, dim_length, dim_width)[0]
     dry_mass = calculate_dry_mass(inputs)
-    inputs["mass"]["Propellant_mass"] = calc_prop_mass(dry_mass, inputs["Insertion_DeltaV"], inputs["Onorbit_DeltaV"])
+    inputs["mass"]["Propellant_mass"] = calc_prop_mass(dry_mass, inputs)
 
     wet_mass_evolution.append(calculate_wet_mass(inputs))
     prop_mass_evolution.append(inputs["mass"]["Propellant_mass"])
@@ -100,9 +109,9 @@ def iteration_loop(inputs, dry_mass_margin=1.1, values_close_percent=0.5):
             print("Warning: Mass iteration loop exceeded 100 iterations. Check inputs or convergence criteria.")
             break
 
-        inputs["mass"]["Structural_mass"] = calc_struct_mass(calculate_wet_mass(inputs), inputs["Structural setup"])
+        inputs["mass"]["Structural_mass"] = calc_struct_mass(calculate_wet_mass(inputs), dim_height, dim_length, dim_width)[0]
         dry_mass = calculate_dry_mass(inputs)
-        inputs["mass"]["Propellant_mass"] = calc_prop_mass(dry_mass, inputs["Insertion_DeltaV"], inputs["Onorbit_DeltaV"])
+        inputs["mass"]["Propellant_mass"] = calc_prop_mass(dry_mass, inputs)
 
         wet_mass_evolution.append(calculate_wet_mass(inputs))
         prop_mass_evolution.append(inputs["mass"]["Propellant_mass"])
@@ -152,7 +161,9 @@ if __name__ == "__main__":
     }
 
     inputs["Structural setup"] = {
-        "REVIEW": 0
+        'dim_height': 3,  # m
+        'dim_length': 1.2,  # m
+        'dim_width': 1.7,  # m
         }
 
     inputs["Propellant_mass_guess"] = 0 # kg
@@ -174,3 +185,25 @@ if __name__ == "__main__":
     print(f"Final wet mass: {final_wet_mass} kg")
     print(f"Final propellant mass: {final_prop_mass} kg")
     print(f"Final structural mass: {final_struct_mass} kg")
+
+
+    # Assume wet_mass_evolution and prop_mass_evolution are already defined
+
+    # Create a range for iteration numbers
+    iterations = range(len(wet_mass_evolution))
+
+    # Create the plot
+    plt.figure(figsize=(10, 6))
+    plt.plot(iterations, wet_mass_evolution, label='Wet Mass', marker='o')
+    plt.plot(iterations, prop_mass_evolution, label='Propellant Mass', marker='x')
+
+    # Add labels and title
+    plt.xlabel('Iteration Number')
+    plt.ylabel('Mass (kg)')
+    plt.title('Evolution of Wet Mass and Propellant Mass')
+    plt.legend()
+    plt.grid(True)
+
+    # Display the plot
+    plt.tight_layout()
+    plt.show()

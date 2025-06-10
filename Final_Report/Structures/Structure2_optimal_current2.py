@@ -2,6 +2,18 @@ import math
 from scipy.optimize import fsolve
 import numpy as np
 import matplotlib.pyplot as plt
+###ADDED BY LASZLO###
+import sys
+import os
+
+# Get the directory of the current script (Structure2_optimal_current2.py)
+current_dir = os.path.dirname(os.path.abspath(__file__))
+
+# Add the directory containing test_johnson_2.py to sys.path
+# If test_johnson_2.py is in the same directory:
+sys.path.append(current_dir)
+###END OF ADDED BY LASZLO###
+
 from test_johnson_2 import test_johnson_2f
 from whipple_shield import * 
 
@@ -481,6 +493,7 @@ def launcher_loading_noclass(fnat_ax=20, fnat_lat=6, maxg_ax = 6, maxg_lat = 2, 
 
 def structural_mass_wpanel(sc_mass, dim_height, dim_length, dim_width): 
     ### INPUTS ###
+
     x = [0, dim_width, dim_width, 0] #x-coordinates of the polygon points
     y = [0, 0, dim_length, dim_length] #y-coordinates of the polygon points
     #stringers = [0, 0, 0, 0] #number of stringers per element
