@@ -130,12 +130,12 @@ if __name__ == "__main__":
     inputs = {}
 
     inputs["mass"] = {
-        "Payload_mass": 102,  # kg
-        "ADCS_mass": 65,  # kg
-        "TTC_mass": 49,  # kg
+        "Payload_mass": 142,  # kg
+        "ADCS_mass": 36.7,  # kg
+        "TTC_mass": 75,  # kg
         "CDHS_mass": 10,  # kg
-        "Thermal_mass": 29,  # kg
-        "Power_mass": 108,  # kg
+        "Thermal_mass": 29.45,  # kg
+        "Power_mass": 41.36,  # kg
         "Propulsion_dry_mass": 134,  # kg
     }
 
@@ -143,7 +143,7 @@ if __name__ == "__main__":
         "Electric_isp":1500,  # s
         "Electric_prop_margin": 0.20,
         "Electric_propellant_density": 1350,  # kg/m^3 (Xenon)
-        "Electric_tank_volume": 2 * 0.004,
+        "Electric_tank_volume": 2 * 0.005,
 
         "Biprop_isp": 321, # s
         "Biprop_prop_margin": 0.15,
