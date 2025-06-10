@@ -4,7 +4,7 @@ import scipy.integrate as integrate
 Rm = 3389.500 #km
 Rs = 696340.000 #km
 dms = 2.28e8 #km
-h = 188 #km
+h = 212.4782 #km
 
 i = 92.4432 #deg
 delta_mars = 25.2 #deg
