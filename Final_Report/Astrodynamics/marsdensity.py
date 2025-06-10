@@ -52,25 +52,25 @@ def plot_mars_density(year=2):
 
     dmax_altitude_215 = dmax_all[idx_215]
 
-    plt.figure(figsize=(12, 6))
+    # plt.figure(figsize=(12, 6))
 
-    plt.scatter(np.log10(density), height, color='r', s=5, label='Density range (all Ls)')
+    # plt.scatter(np.log10(density), height, color='r', s=5, label='Density range (all Ls)')
 
-    plt.plot(np.log10(dmax_all), H, 'k-', linewidth=3, label='Max density (all Ls)')
-    plt.plot(np.log10(dmin_all), H, 'b-', linewidth=3, label='Min density (all Ls)')
+    # plt.plot(np.log10(dmax_all), H, 'k-', linewidth=3, label='Max density (all Ls)')
+    # plt.plot(np.log10(dmin_all), H, 'b-', linewidth=3, label='Min density (all Ls)')
 
-    plt.plot(np.log10(dmax_270), H, 'k--', linewidth=3, label='Max density (Ls=270°)')
-    plt.plot(np.log10(dmin_270), H, 'b--', linewidth=3, label='Min density (Ls=270°)')
+    # plt.plot(np.log10(dmax_270), H, 'k--', linewidth=3, label='Max density (Ls=270°)')
+    # plt.plot(np.log10(dmin_270), H, 'b--', linewidth=3, label='Min density (Ls=270°)')
 
-    plt.xlabel('density (log10 kg/m³)')
-    plt.ylabel('height (km)')
-    if year == 2:
-        plt.title("Mars Atmospheric Density Envelope (TES Year 2)")
-    elif year == 1:
-        plt.title("Mars Atmospheric Density Envelope (TES Year 1)")
-    plt.legend()
-    plt.grid(True)
-    plt.show()
+    # plt.xlabel('density (log10 kg/m³)')
+    # plt.ylabel('height (km)')
+    # if year == 2:
+    #     plt.title("Mars Atmospheric Density Envelope (TES Year 2)")
+    # elif year == 1:
+    #     plt.title("Mars Atmospheric Density Envelope (TES Year 1)")
+    # plt.legend()
+    # plt.grid(True)
+    # plt.show()
 
     return {
         'height': H,

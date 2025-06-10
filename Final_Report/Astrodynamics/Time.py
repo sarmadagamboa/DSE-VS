@@ -1,6 +1,6 @@
 import numpy as np
 from scipy.constants import G
-
+from marsdensity import plot_mars_density
 # Constants
 M_sun = 1.989e30  # Mass of the Sun in kg
 AU = 1.496e8  # Astronomical Unit in km
@@ -41,94 +41,51 @@ def compute_transfer_time():
 
     return time_to_transfer
 
-def calculate_aerobraking_time_np(initial_apocenter_altitude_km=212.5, spacecraft_mass_kg=654.731,drag_coefficient=2.6, cross_sectional_area_m2=1.45):
-    print("--- Mars Aerobraking Time Calculator (using NumPy) ---")
-    print("This program estimates the aerobraking duration on Mars.")
-    print("It uses a simplified exponential atmospheric model and assumes a constant pericenter.")
-    print("Note: Aerobraking at 212.5 km pericenter is extremely slow due to very thin atmosphere.")
-    print("Actual aerobraking maneuvers typically occur at much lower altitudes (e.g., 100-150 km).")
-    print("-" * 40)
+def orbital_decay(alt,start_apocenter = 45000, year= 2, spacecraft_mass=595*2, drag_coefficient=2.2, cross_sectional_area=1.54):
+    """
+    Calculate the orbital decay due to atmospheric drag over a specified time period.
+    """
+    H = 11e3
+    R_mars = 3390e3
+    mu = 4.282837e13  # Mars gravitational parameter in m^3/s^2
 
-    G = 6.67430e-11
-    M_mars = 6.4169e23
-    MU_MARS = G * M_mars
-    R_MARS = 3389.5e3
-
-    PERICENTER_DENSITY = 1.797e-11
-    H_SCALE = 11.1e3
-
-
-    PERICENTER_ALTITUDE_KM = 212.5
-    TARGET_APOCENTER_ALTITUDE_KM = 212.5
-
+    results = plot_mars_density(year)
+    heights = results['height']
+    densities = results['max_density']
     
-    initial_apocenter_radius = R_MARS + initial_apocenter_altitude_km * 1000
-    pericenter_radius = R_MARS + PERICENTER_ALTITUDE_KM * 1000
-    target_apocenter_radius = R_MARS + TARGET_APOCENTER_ALTITUDE_KM * 1000
+    idx = np.abs(heights - alt).argmin()
+    closest_alt = heights[idx]
+    rho = densities[idx]
+    print(rho)
+    if np.isnan(rho):
+        raise ValueError(f"No atmospheric density data available for altitude {alt} km.")
 
-    current_apocenter_altitude = initial_apocenter_altitude_km
-    total_time_seconds = 0.0
-    num_orbits = 0
+    r = R_mars +closest_alt*1000
+    apocenter = R_mars + start_apocenter * 1000  # Convert to meters
+    a_current = (r + apocenter)/2 # Semi-major axis in meters
+    v_pericenter = np.sqrt(mu * (2 / r - 1 / a_current))
+    drag_force = 0.5 * rho * v_pericenter**2 * drag_coefficient * cross_sectional_area
+    print(drag_force)
+    L_effect = np.sqrt(2*np.pi*r*H)
+    s = np.pi * r  # Circumference of the orbit
+    delta_E = -drag_force * s 
+    E = -spacecraft_mass * mu / (2*a_current)  # Initial orbital energy
+    E_final = E + delta_E
+    a_final = -spacecraft_mass * mu / (2 * E_final)
+    #print(r_final)  # New radius after decay
+    delta_r = (-a_current+a_final)/1000
+    return delta_r
 
-    print("\nStarting aerobraking simulation...")
-    MAX_ORBITS = 10_000_000
-    APOCENTER_TOLERANCE_KM = 0.1
-
-    while current_apocenter_altitude > (TARGET_APOCENTER_ALTITUDE_KM + APOCENTER_TOLERANCE_KM) and num_orbits < MAX_ORBITS:
-        current_apocenter_radius = R_MARS + current_apocenter_altitude * 1000
-        
-        current_semi_major_axis = (pericenter_radius + current_apocenter_radius) / 2
-
-        if current_semi_major_axis <= 0:
-            print("Error: Semi-major axis became non-positive. Aborting simulation.")
-            break
-
-        orbital_period_seconds = 2 * np.pi * np.sqrt(current_semi_major_axis**3 / MU_MARS)
-
-        velocity_at_pericenter = np.sqrt(MU_MARS * (2 / pericenter_radius - 1 / current_semi_major_axis))
-
-        density_at_pericenter = PERICENTER_DENSITY
-
-        delta_semi_major_axis_per_orbit = - (drag_coefficient * cross_sectional_area_m2 / spacecraft_mass_kg) * \
-                                            density_at_pericenter * velocity_at_pericenter**2 * \
-                                            H_SCALE * (2 * current_semi_major_axis**2 / MU_MARS)
-        
-        delta_apocenter_radius_per_pass = 2 * delta_semi_major_axis_per_orbit
-
-        delta_apocenter_altitude_per_pass_km = delta_apocenter_radius_per_pass / 1000
-        print(f"THIS IS THE DELTA ALTITUDE:{delta_apocenter_altitude_per_pass_km} km")
-        current_apocenter_altitude += delta_apocenter_altitude_per_pass_km
-
-        total_time_seconds += orbital_period_seconds
-        num_orbits += 1
-
-        if num_orbits % 10000 == 0 or (num_orbits < 1000 and num_orbits % 100 == 0) :
-            print(f"  Orbit: {num_orbits:,.0f}, Current Apocenter: {current_apocenter_altitude:.2f} km, Time: {total_time_seconds / (24 * 3600):.2f} days")
-
-    total_time_days = total_time_seconds / (24 * 3600)
-    total_time_years = total_time_days / 365.25
-
-    print("\n--- Aerobraking Simulation Complete ---")
-    if num_orbits >= MAX_ORBITS:
-        print(f"Simulation stopped after {MAX_ORBITS:,.0f} orbits (Max limit reached).")
-        print("This indicates a very long aerobraking duration or insufficient drag for the target.")
-    else:
-        print("Target apocenter altitude reached.")
-
-    print(f"\nInitial Apocenter Altitude: {initial_apocenter_altitude_km:.2f} km")
-    print(f"Pericenter Altitude: {PERICENTER_ALTITUDE_KM:.2f} km (Constant)")
-    print(f"Final Apocenter Altitude: {current_apocenter_altitude:.2f} km")
-    print(f"Spacecraft Mass: {spacecraft_mass_kg:.2f} kg")
-    print(f"Cross-sectional Area: {cross_sectional_area_m2:.2f} m^2")
-    print(f"Drag Coefficient: {drag_coefficient:.2f}")
-
-    print(f"\nTotal Number of Orbits: {num_orbits:,.0f}")
-    print(f"Total Aerobraking Time: {total_time_days:,.2f} days")
-    print(f"                          ({total_time_years:,.2f} years)")
-
-calculate_aerobraking_time_np()
-
+lifetime = 1.88  # Operational lifetime in years
+alt = 100
 # Total transfer time to Mars using Hohmann transfer
 transfer_time = compute_transfer_time()
 print(f"Total transfer time from Earth to Mars: {transfer_time:.2f} days")
-
+total_decay = orbital_decay(
+    alt=alt,
+    year=2,  # 2 years of decay
+    spacecraft_mass=595*2,  # kg
+    drag_coefficient=2.2,
+    cross_sectional_area=1.54,  # m/s orbital velocity   # years of operation before decay
+)
+print(f"Total orbital decay at {alt} km altitude: {total_decay:.2f} km")
