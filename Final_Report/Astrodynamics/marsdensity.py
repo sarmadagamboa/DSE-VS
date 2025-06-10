@@ -4,15 +4,15 @@ import numpy as np
 
 def plot_mars_density(year=2):
     if year == 2:
-        data = np.loadtxt(r'Final Report\Astrodynamics\tpdhsy21.txt', skiprows=1) 
+        data = np.loadtxt(r'Final_Report\Astrodynamics\tpdhsy21.txt', skiprows=1) 
     elif year == 1:
-        data = np.loadtxt(r'Final Report\Astrodynamics\tpdhsy11.txt', skiprows=1) 
+        data = np.loadtxt(r'Final_Report\Astrodynamics\tpdhsy11.txt', skiprows=1) 
 
     Ls = data[:, 0]
     height = data[:, 1]
     density = data[:, 13]
 
-    H = np.arange(80, 300, 5)
+    H = np.arange(80, 400, 5)
 
     dmax_all = np.zeros_like(H, dtype=float)
     dmin_all = np.zeros_like(H, dtype=float)
@@ -77,6 +77,6 @@ def plot_mars_density(year=2):
         'max_density': dmax_all
     }
 
-results = plot_mars_density(year=2)
+results = plot_mars_density(year=1)
 print("Heights (km):", results['height'])
 print("Max Densities (kg/m^3):", results['max_density'])

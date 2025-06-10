@@ -464,16 +464,16 @@ class Load_calculation:
 
 if __name__ == "__main__":
     ### INPUTS ###
-    x = [0, 1.45, 1.45, 0] #x-coordinates of the polygon points
-    y = [0, 0, 1, 1] #y-coordinates of the polygon points
+    x = [0, 1.7, 1.7, 0] #x-coordinates of the polygon points
+    y = [0, 0, 1.2, 1.2] #y-coordinates of the polygon points
     #stringers = [0, 0, 0, 0] #number of stringers per element
     sc_mass = 1063 #mass of the total wet spacecraft in kg
-    sc_height = 2.5 #height of the spacecraft in m
+    sc_height = 3 #height of the spacecraft in m
     
 
     #introducing realism, change  
     kd_factor = 0.85 #knockdown factor 
-    safety_mass_margin = 1.75 #for joints, discontinuities etc.
+    safety_mass_margin = 1.15 #for joints, discontinuities etc.
 
     #thermal stability inputs 
     instrument_path = sc_height
@@ -577,7 +577,8 @@ if __name__ == "__main__":
                     
                     
                     ##### finalise calculations
-                    weight_t_min = weight[min_t_ix]
+                    #weight_t_min = weight[min_t_ix]
+                    weight_t_min = weight[min_t_ix] + 0.75 + 8.370000000000001 + 10.56 + 3.2082468 #ADCS plate + radiation shielding + MMOD protection + CAI vibration
                     cost = weight_t_min * material.cost_kg
 
                     # Normalize individual metrics
@@ -633,8 +634,13 @@ if __name__ == "__main__":
         m = r["material"]
         print(f"Material Name={m.name}, E={m.E/1e9:.0f} GPa, Cost=${m.cost_kg}/kg, Manufacturability={m.manuf}")
         print(f"Stringers: {r['stringers']}, Stringer type: {r['stringer type']}, t_min: {r['t_min']:.4f} m, Mass: {r['mass']:.2f} kg, Cost: ${r['cost']:.2f}, Score: {r['score']:.2e}\n")
+        total_mass =r['mass']
 
     print("Stringer fail configs:", stringer_count_fail_configs) 
     print("Frequency fail configs:", frequency_fail_configs) 
     print("Thermal fail configs:", thermal_fail_configs) 
+
+    #Final mass 
+
+    print("Final mass:", total_mass)
     

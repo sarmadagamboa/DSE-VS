@@ -21,7 +21,7 @@ def compute_atmospheric_drag(mars_altitude, spacecraft_velocity, spacecraft_mass
     return delta_v_drag
 
 
-def plot_delta_v_vs_altitude(alt = 200, year=1, spacecraft_mass=850, drag_coefficient=2.6, cross_sectional_area=1.54, delta_t=3.3*365*24*3600):
+def plot_delta_v_vs_altitude(alt = 200, year=1, spacecraft_mass=850, drag_coefficient=2.6, cross_sectional_area=1.54, delta_t=2.2*365*24*3600):
     # Get heights and max densities from your function
     R_mars = 3390e3
     mu = 4.282837e13
@@ -32,13 +32,13 @@ def plot_delta_v_vs_altitude(alt = 200, year=1, spacecraft_mass=850, drag_coeffi
     idx = np.abs(heights - alt).argmin()
     closest_alt = heights[idx]
     rho = densities[idx]
-    print(rho)
+    # print(rho)
     if np.isnan(rho):
         raise ValueError(f"No atmospheric density data available for altitude {alt} km.")
 
     r = R_mars +closest_alt*1000
     v_orbit = np.sqrt(mu / r)
-    print(v_orbit)
+    # print(v_orbit)
     results = plot_mars_density(year)
     heights = results['height']
     densities = results['max_density']
@@ -102,7 +102,7 @@ def orbital_decay(alt, year= 2, spacecraft_mass=700, drag_coefficient=2.6, cross
     r_final = -spacecraft_mass * mu / (2 * E_final)
     #print(r_final)  # New radius after decay
     delta_r = (-r+r_final)/1000
-    return delta_r 
+    return delta_r *403
 
 
 
@@ -112,14 +112,14 @@ def orbital_decay(alt, year= 2, spacecraft_mass=700, drag_coefficient=2.6, cross
 
 
 # Example usage:
-altitude = 188
+altitude = 212
 plot_delta_v_vs_altitude(
     alt = altitude,
     year=2,# km/s example velocity
     spacecraft_mass=700,      # kg
     drag_coefficient=2.6,
     cross_sectional_area=1.54,  # m²
-    delta_t=3.3*365*24*3600       # seconds duration
+    delta_t=1.8*365*24*3600       # seconds duration
 )
 
 

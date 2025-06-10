@@ -1,6 +1,6 @@
 from Final_Report.Structures.Structure2_optimal_current2 import structural_mass_wpanel
 
-from Final Report.Payload.payloadpointing import ... as calc_prop_mass ###THIS IS BULLSHIT
+from Final_Report. import ... as calc_prop_mass ###THIS IS BULLSHIT
 
 """
 Calculates the structural nass 
