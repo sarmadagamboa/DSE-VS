@@ -578,7 +578,7 @@ if __name__ == "__main__":
                     
                     ##### finalise calculations
                     #weight_t_min = weight[min_t_ix]
-                    weight_t_min = weight[min_t_ix] + 0.75 + 8.370000000000001 + 10.56 + 3.2082468 #ADCS plate + radiation shielding + MMOD protection + CAI vibration
+                    weight_t_min = weight[min_t_ix] + 0.75 + 8.38 + 1.26 + 3.21 #ADCS plate + radiation shielding + MMOD protection + CAI vibration
                     cost = weight_t_min * material.cost_kg
 
                     # Normalize individual metrics

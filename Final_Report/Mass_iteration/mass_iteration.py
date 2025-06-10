@@ -1,11 +1,11 @@
-from Final_Report.Structures.Structure2_optimal_current2 import structural_mass_wpanel
+from Final_Report.Structures.Structure2_optimal_current2 import *
 
 from Final_Report. import ... as calc_prop_mass ###THIS IS BULLSHIT
 
 """
 Calculates the structural nass 
     
-    structural_mass = structural_mass_wpanel(sc_mass = 1063)
+    structural_mass_itercode = structural_mass_wpanel(sc_mass = 921.51, dim_height = 3, dim_length = 1.2, dim_width = 1.7)[0]
 
 calc_prop_mass(dry_mass, Transfer_DeltaV, Onorbit_deltaV)
     returns the new propellant mass

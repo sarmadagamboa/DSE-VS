@@ -17,18 +17,21 @@ def whipple_rear_wall_thickness(
     t_r = c * m_p * velocity_kms / (s**(2))
     return t_r
 
-m_p = 1e-2   
-velocity_kms = 20    
-s = 10          
+def whipple_mass(dim_width, dim_length): 
+    m_p = 1e-2   
+    velocity_kms = 20    
+    s = 10          
 
-t_rear = whipple_rear_wall_thickness(m_p, velocity_kms, s)
-t_bumper = t_rear/5
-t_total = t_bumper + t_rear
-print(f"Required rear wall thickness: {t_rear*1e3:.2f} mm")
-print(f"Required bumper wall thickness: {t_bumper*1e3:.2f} mm")
+    t_rear = whipple_rear_wall_thickness(m_p, velocity_kms, s)
+    t_bumper = t_rear/5
+    t_total = t_bumper + t_rear
+    print(f"Required rear wall thickness: {t_rear*1e3:.2f} mm")
+    print(f"Required bumper wall thickness: {t_bumper*1e3:.2f} mm")
 
-mass_whipple_shield = t_total * 1.7 * 1.2 * 2800
-print(mass_whipple_shield)
+    mass_whipple_shield = t_bumper * dim_width * dim_length * 2800
+    print(mass_whipple_shield)
+    return mass_whipple_shield
+    
 
 #since sufficient 1.5 mm wall monolithic wall sufficient - aluminium can act as the rear wall in a Whipple configuration,
 #but does require bumper in front 
