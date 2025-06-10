@@ -1,6 +1,6 @@
 import numpy as np
 from scipy.constants import G
-
+from marsdensity import plot_mars_density
 # Constants
 M_sun = 1.989e30  # Mass of the Sun in kg
 AU = 1.496e8  # Astronomical Unit in km
@@ -41,67 +41,51 @@ def compute_transfer_time():
 
     return time_to_transfer
 
-def compute_time_to_distance(delta_v, distance_earth_probe, target_distance):
+def orbital_decay(alt,start_apocenter = 45000, year= 2, spacecraft_mass=595*2, drag_coefficient=2.2, cross_sectional_area=1.54):
     """
-    Compute the time it takes for a spacecraft to reach a specific distance during the Mars Transfer Injection phase.
-    
-    Parameters:
-    delta_v (float): The delta-v at launch (in km/s).
-    distance_earth_probe (float): The distance from Earth to the spacecraft at the start of the mission (in km).
-    target_distance (float): The target distance from Earth to probe at a given point (in km).
-    
-    Returns:
-    time_to_reach (float): The time to reach the specified target distance (in days).
+    Calculate the orbital decay due to atmospheric drag over a specified time period.
     """
-    # Convert distances to meters
-    distance_earth_probe_m = distance_earth_probe * 1e3  # in meters
-    target_distance_m = target_distance * 1e3  # in meters
+    H = 11e3
+    R_mars = 3390e3
+    mu = 4.282837e13  # Mars gravitational parameter in m^3/s^2
+
+    results = plot_mars_density(year)
+    heights = results['height']
+    densities = results['max_density']
     
-    # Semi-major axis of the transfer orbit (average of Earth's and Mars' orbits)
-    a_e = 1 * AU  # Earth orbital radius in km
-    a_m = 1.524 * AU  # Mars orbital radius in km
-    a_t = (a_e + a_m) / 2  # Semi-major axis of the transfer orbit (Hohmann transfer)
+    idx = np.abs(heights - alt).argmin()
+    closest_alt = heights[idx]
+    rho = densities[idx]
+    print(rho)
+    if np.isnan(rho):
+        raise ValueError(f"No atmospheric density data available for altitude {alt} km.")
 
-    # Convert to meters
-    a_t_m = a_t * 1e3  # semi-major axis in meters
+    r = R_mars +closest_alt*1000
+    apocenter = R_mars + start_apocenter * 1000  # Convert to meters
+    a_current = (r + apocenter)/2 # Semi-major axis in meters
+    v_pericenter = np.sqrt(mu * (2 / r - 1 / a_current))
+    drag_force = 0.5 * rho * v_pericenter**2 * drag_coefficient * cross_sectional_area
+    print(drag_force)
+    L_effect = np.sqrt(2*np.pi*r*H)
+    s = np.pi * r  # Circumference of the orbit
+    delta_E = -drag_force * s 
+    E = -spacecraft_mass * mu / (2*a_current)  # Initial orbital energy
+    E_final = E + delta_E
+    a_final = -spacecraft_mass * mu / (2 * E_final)
+    #print(r_final)  # New radius after decay
+    delta_r = (-a_current+a_final)/1000
+    return delta_r
 
-    # Gravitational parameter (mu) of the Sun
-    mu = G * M_sun  # in m^3/s^2
-
-    # Orbital period (Kepler's third law)
-    T = 2 *np.pi * np.sqrt(a_t_m**3 / mu)  # in seconds
-    T_days = T / (60 * 60 * 24)  # Convert to days
-
-    # Using the vis-viva equation to calculate the velocity at any distance r
-    def vis_viva(r):
-        return np.sqrt(mu * (2/r - 1/a_t_m))
-
-    # Solve for time to reach the target distance by integrating the velocity
-    def time_integrand(r):
-        return 1 / vis_viva(r)
-
-    # Integrating the time over the path from Earth (distance_earth_probe) to target_distance
-    if target_distance_m > distance_earth_probe_m:
-        from scipy.integrate import quad
-        time_to_reach, _ = quad(time_integrand, distance_earth_probe_m, target_distance_m)
-    else:
-        return "Target distance must be greater than the starting distance"
-
-    # Convert time from seconds to days
-    time_to_reach_days = time_to_reach / (60 * 60 * 24)
-    
-    return time_to_reach_days
-
-
-# Example usage: Compute total transfer time and time to reach a specific distance
-
-delta_v_input = float(input("Enter the delta-v at launch (in km/s): "))  # Delta-v in km/s# Distance from Earth to spacecraft in km
-
+lifetime = 1.88  # Operational lifetime in years
+alt = 100
 # Total transfer time to Mars using Hohmann transfer
 transfer_time = compute_transfer_time()
 print(f"Total transfer time from Earth to Mars: {transfer_time:.2f} days")
-
-# # Time to reach a specific distance during the MTI phase
-target_distance_input = float(input("Enter the target distance from Earth to spacecraft (in km): "))
-time_to_reach = compute_time_to_distance(delta_v_input, distance_earth_probe_input, target_distance_input)
-print(f"Time to reach {target_distance_input} km: {time_to_reach:.2f} days")
+total_decay = orbital_decay(
+    alt=alt,
+    year=2,  # 2 years of decay
+    spacecraft_mass=595*2,  # kg
+    drag_coefficient=2.2,
+    cross_sectional_area=1.54,  # m/s orbital velocity   # years of operation before decay
+)
+print(f"Total orbital decay at {alt} km altitude: {total_decay:.2f} km")

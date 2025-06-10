@@ -102,7 +102,7 @@ def orbital_decay(alt, year= 2, spacecraft_mass=700, drag_coefficient=2.6, cross
     r_final = -spacecraft_mass * mu / (2 * E_final)
     #print(r_final)  # New radius after decay
     delta_r = (-r+r_final)/1000
-    return delta_r *403
+    return delta_r 
 
 
 
@@ -112,22 +112,22 @@ def orbital_decay(alt, year= 2, spacecraft_mass=700, drag_coefficient=2.6, cross
 
 
 # Example usage:
-altitude = 212
+altitude = 212.48
 plot_delta_v_vs_altitude(
     alt = altitude,
     year=2,# km/s example velocity
-    spacecraft_mass=700,      # kg
+    spacecraft_mass=654.731,      # kg
     drag_coefficient=2.6,
-    cross_sectional_area=1.54,  # m²
-    delta_t=1.8*365*24*3600       # seconds duration
+    cross_sectional_area=1.45,  # m²
+    delta_t=1.88*365*24*3600       # seconds duration
 )
 
 
 decay = orbital_decay(
     alt =altitude,
     year=2,
-    spacecraft_mass=700,
+    spacecraft_mass=654.731,
     drag_coefficient=2.6,
-    cross_sectional_area=1.54
+    cross_sectional_area=1.45
 )
 print(f"Orbital decay at altitude {altitude} km: {decay} km")
