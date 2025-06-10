@@ -39,30 +39,68 @@ def calc_prop_mass(dry_mass, inputs):
     # Check tank capacities
     # Electric propellant check
     max_electric_prop = inputs["Propulsion setup"]["Electric_tank_volume"] * inputs["Propulsion setup"]["Electric_propellant_density"]
-    electric_fits = m_prop_stkeeping_electric <= max_electric_prop
+    electric_fits = (m_prop_stkeeping_electric <= max_electric_prop)
 
     # Fuel tank check
     max_fuel_capacity = inputs["Propulsion setup"]["Fuel_tank_volume"]
-    fuel_fits = v_fuel_required <= max_fuel_capacity
+    fuel_fits = (v_fuel_required <= max_fuel_capacity)
 
     # Oxidizer tank check
     max_oxidizer_capacity = inputs["Propulsion setup"]["Oxidizer_tank_volume"]
-    oxidizer_fits = v_oxidizer_required <= max_oxidizer_capacity
+    oxidizer_fits = (v_oxidizer_required <= max_oxidizer_capacity)
 
     # Pressurant tank check
     max_pressurant_capacity = inputs["Propulsion setup"]["Pressurant_tank_volume"]
     pressurant_fits = (v_press <= max_pressurant_capacity)
 
     all_tanks_fit = electric_fits and fuel_fits and oxidizer_fits and pressurant_fits
+    total_prop_mass = fuel_mass+oxidiser_mass+m_prop_stkeeping_electric+M_press
+    return total_prop_mass
+    
 
-    if all_tanks_fit:
-        # Return total propellant mass if everything fits
-        total_prop_mass = fuel_mass+oxidiser_mass+m_prop_stkeeping_electric+M_press
-        return total_prop_mass
-    else:
-        # Return None if tanks don't fit
-        return None
+def check_tank_capacities(dry_mass, inputs):
+    """Check if the tanks have enough capacity for the propellant mass.
+    """
+    m_beforesk = dry_mass * math.exp(inputs["Onorbit_DeltaV"] / (inputs["Propulsion setup"]["Electric_isp"] * g))
+    m_prop_electric_nomargin = m_beforesk - dry_mass
+    m_prop_stkeeping_electric = m_prop_electric_nomargin * (1 + inputs["Propulsion setup"]["Electric_prop_margin"])
 
+    m_beforecapture = m_beforesk * math.exp(inputs["Insertion_DeltaV"] / (inputs["Propulsion setup"]["Biprop_isp"] * g))
+    m_prop_capture_nomargin = m_beforecapture - m_beforesk
+    m_prop_capture_biprop =  m_prop_capture_nomargin*(1+inputs["Propulsion setup"]["Biprop_prop_margin"])
+
+    fuel_mass = m_prop_capture_biprop / (1 + inputs["Propulsion setup"]["Ox_fuel_ratio"])
+    oxidiser_mass = inputs["Propulsion setup"]["Ox_fuel_ratio"] * fuel_mass
+
+    v_fuel_required = fuel_mass/inputs["Propulsion setup"]["Fuel_density"]
+    v_oxidizer_required = oxidiser_mass /inputs["Propulsion setup"]["Oxidizer_density"]
+    v_prop_biprop = v_fuel_required + v_oxidizer_required
+
+    M_press = inputs["Propulsion setup"]["final_press"] * v_prop_biprop / (inputs["Propulsion setup"]['gas_const']* inputs["Propulsion setup"]['storage_press'])
+    v_press = M_press * inputs["Propulsion setup"]['gas_const'] * inputs["Propulsion setup"]['storage_temp'] / inputs["Propulsion setup"]['storage_press']
+
+    # Check tank capacities
+    # Electric propellant check
+    max_electric_prop = inputs["Propulsion setup"]["Electric_tank_volume"] * inputs["Propulsion setup"]["Electric_propellant_density"]
+    electric_fits = (m_prop_stkeeping_electric <= max_electric_prop)
+
+    # Fuel tank check
+    max_fuel_capacity = inputs["Propulsion setup"]["Fuel_tank_volume"]
+    fuel_fits = (v_fuel_required <= max_fuel_capacity)
+
+    # Oxidizer tank check
+    max_oxidizer_capacity = inputs["Propulsion setup"]["Oxidizer_tank_volume"]
+    oxidizer_fits = (v_oxidizer_required <= max_oxidizer_capacity)
+
+    # Pressurant tank check
+    max_pressurant_capacity = inputs["Propulsion setup"]["Pressurant_tank_volume"]
+    pressurant_fits = (v_press <= max_pressurant_capacity)
+
+    all_tanks_fit = electric_fits and fuel_fits and oxidizer_fits and pressurant_fits
+    tank_fits = [electric_fits, fuel_fits, oxidizer_fits, pressurant_fits]
+    tank_vols = [max_electric_prop, max_fuel_capacity, max_oxidizer_capacity, max_pressurant_capacity]
+    tank_caps = [m_prop_stkeeping_electric, v_fuel_required, v_oxidizer_required, v_press]
+    return all_tanks_fit, tank_fits, tank_vols, tank_caps
 
 
 def calculate_wet_mass(inputs, dry_mass_margin=1.1):
@@ -121,6 +159,8 @@ def iteration_loop(inputs, dry_mass_margin=1.1, values_close_percent=0.5):
         else:
             values_close = False
     
+    inputs["tank_check"]["all_tanks_fit"], inputs["tank_check"]["tank_fits"], inputs["tank_check"]["tank_vols"], inputs["tank_check"]["tank_caps"] = check_tank_capacities(inputs["mass"]["Propellant_mass"], inputs)
+
     return wet_mass_evolution, prop_mass_evolution, inputs
 
 
