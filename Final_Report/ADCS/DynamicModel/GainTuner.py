@@ -21,11 +21,16 @@ def desired_attitude(t):
     return np.array([desired_roll, desired_pitch, desired_yaw])
 
 def disturbance(t):
-    Solar_pressure_torque = maximum_torque(q, A_s, c_ps, c_g_s)
+    Solar_pressure_torque = maximum_torque(q, A_s, c_ps, c_g)
     Gravity_gradient_torque = gravity_torque(r=r, theta=theta, I_y=Iyy, I_z=Izz)
-    Aerodynamic_torque = aerodynamic_torque(C_d=C_d, rho=rho, A=A_s, r=r, c_g=c_g_a, c_pa=c_pa)
-    Internal_disturbance_torque = np.array([0, 0, 0]) 
-    # if t < 3600:
+    Aerodynamic_torque = aerodynamic_torque(C_d=C_d, rho=rho, A=A_aero, r=r, c_g=c_g, c_pa=c_pa)
+    if t < 1000:
+        Internal_disturbance_torque = np.array([0, 0, 0])
+    # elif t >= 1000 and t < 2200:
+    #     Internal_disturbance_torque = np.array([-1.8e-3, 0, 0]) # moving the antenna
+    else:
+        Internal_disturbance_torque = np.array([0, 0, 0])
+    # if t < 3600:      
     #     Internal_disturbance_torque = np.array([0, 0, 0])
     # elif t >= 3600 and t < 3620: 
     #     Internal_disturbance_torque = np.array([1e-4, 1e-4, 1e-4])
@@ -37,7 +42,13 @@ def disturbance(t):
     return total_torque
 
 def controller(omega, attitude_error, Kp, Kd):
-    tau = -Kp * attitude_error - Kd * (omega - omega_desired)
+    Kp = np.array([1.5, Kp, 1.5])   # Proportional gains for long term stability: [1, 1, 1]
+    Kd = np.array([34.5, Kd, 34.5])      # Derivative gains for long term stability: [10, 15, 10]
+    tau = np.zeros(3)  # Initialize torque vector
+    tau[0] = -Kp[0] * attitude_error[0] - Kd[0] * (omega[0] - omega_desired[0])
+    tau[1] = -Kp[1] * attitude_error[1] - Kd[1] * (omega[1] - omega_desired[1])
+    tau[2] = -Kp[2] * attitude_error[2] - Kd[2] * (omega[2] - omega_desired[2])
+    # Clamp and quantize torque
     tau = np.clip(tau, min_torque, max_torque)
     tau[0] = min_x_bit * np.round(tau[0] / min_x_bit)
     tau[1] = min_y_bit * np.round(tau[1] / min_y_bit)
@@ -64,7 +75,7 @@ def dynamics_factory(Kp, Kd):
     return dynamics
 
 # Initial state: omega = [0,0,0], attitude = [0,0,0]
-omega0 = np.array([0, 0, 0])
+omega0 = np.array([om_x, om_y, om_z])
 attitude0 = np.array([0, 0, 0])
 state0 = np.concatenate([omega0, attitude0])
 
@@ -76,8 +87,8 @@ t_span = (0, 110 * 60)
 t_eval = np.linspace(t_span[0], t_span[1], 5000)
 
 # Define kp and kd grids
-kp_values = np.arange(0, 100, 10)         # 0 to 99
-kd_values = np.arange(0, 1000, 100)    # 0, 10, ..., 990
+kp_values = np.arange(0, 10, 0.5)         # 0 to 99
+kd_values = np.arange(0, 50, 0.5)    # 0, 10, ..., 990
 
 # Preallocate arrays to hold metrics
 max_dev_roll = np.zeros((len(kp_values), len(kd_values)))
@@ -86,12 +97,13 @@ max_dev_yaw = np.zeros_like(max_dev_roll)
 total_torque_x = np.zeros_like(max_dev_roll)
 total_torque_y = np.zeros_like(max_dev_roll)
 total_torque_z = np.zeros_like(max_dev_roll)
+torque_activation = np.zeros_like(max_dev_roll)
 
 for i, kp in enumerate(kp_values):
     for j, kd in enumerate(kd_values):
         Kp_vec = np.array([kp]*3)
         Kd_vec = np.array([kd]*3)
-        dyn = dynamics_factory(Kp_vec, Kd_vec)
+        dyn = dynamics_factory(kp, kd)
 
         sol = solve_ivp(dyn, t_span, state0, t_eval=t_eval, method='RK45')
 
@@ -116,19 +128,25 @@ for i, kp in enumerate(kp_values):
         torque_sum_x = 0
         torque_sum_y = 0
         torque_sum_z = 0
+        torque_activation_count = 0
 
         for k in range(len(sol.t)):
             omega_k = sol.y[0:3, k]
             attitude_k = sol.y[3:6, k]
             attitude_err_k = attitude_k - desired_att[:, k]
-            tau_k = controller(omega_k, attitude_err_k, Kp_vec, Kd_vec)
+            tau_k = controller(omega_k, attitude_err_k, kp, kd)
             torque_sum_x += np.abs(tau_k[0]) * dt
             torque_sum_y += np.abs(tau_k[1]) * dt
             torque_sum_z += np.abs(tau_k[2]) * dt
+            for torque in tau_k:
+                if torque != 0:
+                    torque_activation_count += 1
 
         total_torque_x[i, j] = torque_sum_x
         total_torque_y[i, j] = torque_sum_y
         total_torque_z[i, j] = torque_sum_z
+        torque_activation[i, j] = torque_activation_count
+
         
        
     print(f'completed {(i+1)/len(kp_values)*100:.2f}% of Kp values')
@@ -145,7 +163,8 @@ data_dict = {
     "MaxDevYaw_mrad": max_dev_yaw.flatten(),
     "TotalTorqueX_Nm_s": total_torque_x.flatten(),
     "TotalTorqueY_Nm_s": total_torque_y.flatten(),
-    "TotalTorqueZ_Nm_s": total_torque_z.flatten()
+    "TotalTorqueZ_Nm_s": total_torque_z.flatten(),
+    "TorqueActivation": torque_activation.flatten()
 }
 
 df = pd.DataFrame(data_dict)
@@ -153,4 +172,3 @@ df = pd.DataFrame(data_dict)
 # Save CSV
 df.to_csv("gain_sweep_results3.csv", index=False)
 print("Saved gain sweep results to gain_sweep_results3.csv")
-

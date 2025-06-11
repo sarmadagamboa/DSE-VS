@@ -14,6 +14,6 @@ def aerodynamic_torque(C_d, rho, A, r, c_g, c_pa):  # This is constant over one 
     F = 0.5*(rho*C_d*A*V**2)
     
     Ta = F*(c_pa - c_g)
-    return np.array([0, Ta, 0])  # Return torque vector in the x, y, z directions
+    return np.array([0, -Ta[2], Ta[1]])  # Return torque vector in the x, y, z directions
 
-print(f"Aerodynamic torque: {aerodynamic_torque(C_d, rho, A_aero, r, c_g_a, c_pa)} Nm, sign according to flight dynamics convention")
+# print(f"Aerodynamic torque: {aerodynamic_torque(C_d, rho, A_aero, r, c_g, c_pa)} Nm, sign according to flight dynamics convention, c_g ofset is {c_pa-c_g}")

@@ -26,5 +26,5 @@ def maximum_torque(q, A_s, c_ps, c_g):  # This is constant over one orbit but va
     i = 0  # Angle of incidence for maximum torque
     F = F_s / c * A_s * (1 + q) * np.cos(i)
     Tsp = F * (c_ps - c_g)
-    return np.array([Tsp,0,0])  # Return torque vector in the x, y, z directions
-print(f"Maximum solar radiation torque: {maximum_torque(q, A_s, c_ps, c_g_s)} Nm, sign according to flight dynamics convention")
+    return np.array([-Tsp[2],0,Tsp[0]])  # Return torque vector in the x, y, z directions
+# print(f"Maximum solar radiation torque: {maximum_torque(q, A_s, c_ps, c_g)} Nm, sign according to flight dynamics convention")
