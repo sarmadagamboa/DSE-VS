@@ -54,9 +54,16 @@ def calc_prop_mass(dry_mass, inputs):
     pressurant_fits = (v_press <= max_pressurant_capacity)
 
     all_tanks_fit = electric_fits and fuel_fits and oxidizer_fits and pressurant_fits
-    total_prop_mass = fuel_mass+oxidiser_mass+m_prop_stkeeping_electric+M_press
-    return total_prop_mass
-    
+
+    if all_tanks_fit:
+        # Return total propellant mass if everything fits
+        total_prop_mass = fuel_mass + oxidiser_mass + m_prop_stkeeping_electric + M_press
+        return total_prop_mass
+    else:
+        # Return None if tanks don't fit
+        return print(max_oxidizer_capacity, v_oxidizer_required, max_fuel_capacity, v_fuel_required, v_press,
+                     max_pressurant_capacity)
+
 
 def check_tank_capacities(dry_mass, inputs):
     """Check if the tanks have enough capacity for the propellant mass.
@@ -95,16 +102,6 @@ def check_tank_capacities(dry_mass, inputs):
     # Pressurant tank check
     max_pressurant_capacity = inputs["Propulsion setup"]["Pressurant_tank_volume"]
     pressurant_fits = (v_press <= max_pressurant_capacity)
-
-    all_tanks_fit = electric_fits and fuel_fits and oxidizer_fits and pressurant_fits
-
-    if all_tanks_fit:
-        # Return total propellant mass if everything fits
-        total_prop_mass = fuel_mass + oxidiser_mass + m_prop_stkeeping_electric + M_press
-        return print(total_prop_mass)
-    else:
-        # Return None if tanks don't fit
-        return None
 
 
 def calculate_wet_mass(inputs, dry_mass_margin=1.1):
@@ -212,7 +209,7 @@ if __name__ == "__main__":
 
     inputs["Propellant_mass_guess"] = 0 # kg
     inputs["Structural_mass_guess"] = 86.48 # kg
-    inputs["Insertion_DeltaV"] = 1249+45.14  # m/s -- total deltaV of the Mars insertion
+    inputs["Insertion_DeltaV"] = 1308.14  # m/s -- total deltaV of the Mars insertion
     inputs["Onorbit_DeltaV"] = 0.125 * 290.1 + 196.21  # m/s -- total deltaV of the spacecraft after insertion
     inputs["Capture_Time"] = 45 #minutes
     inputs["Stationkeeping_Time"] = 20 * 290.1 + 365 * 24 * 60 / 10 #minutes

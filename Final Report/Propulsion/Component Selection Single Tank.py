@@ -12,7 +12,7 @@ t_capture = 45 # minutes #30 for biprop
 
 #Delta-V requirements
 deltav_station = 0.125*290.1+196.21   #0.105*70+196.21 #orbit maintainance/drag and EOL maneuver
-deltav_capture = 1249+45.14  #m/s capture (Assuming aerobreaking assist)
+deltav_capture = 1308.14  #m/s capture (Assuming aerobreaking assist)
 
 class PropulsionProperties:
     #Electric Propulsion - Stationkeeping
