@@ -26,9 +26,9 @@ if __name__ == "__main__":
         "Fuel_density" :880,  # kg/m^3 (MMH)
         "Oxidizer_density": 1370,  # kg/m^3 (MON-3)
         "Ox_fuel_ratio" :1.65,
-        "Fuel_tank_volume" :0.165,  # m^3
-        "Oxidizer_tank_volume" : 0.165,  # m^
-        'Pressurant_tank_volume': 0.032,  # m^3
+        "Fuel_tank_volume" :0.198,  # m^3
+        "Oxidizer_tank_volume" : 0.198,  # m^
+        'Pressurant_tank_volume': 0.040, #0.032 m^3
 
         'final_press': 2000000,  # Pa
         'storage_temp': 300,  # K
@@ -65,7 +65,7 @@ def calc_prop_mass(dry_mass, inputs):
     v_oxidizer_required = oxidiser_mass /inputs["Propulsion setup"]["Oxidizer_density"]
     v_prop_biprop = v_fuel_required + v_oxidizer_required
 
-    M_press = inputs["Propulsion setup"]["final_press"] * v_prop_biprop / (inputs["Propulsion setup"]['gas_const']* inputs["Propulsion setup"]['storage_press'])
+    M_press = inputs["Propulsion setup"]["final_press"] * v_prop_biprop / (inputs["Propulsion setup"]['gas_const']* inputs["Propulsion setup"]['storage_temp'])
     v_press = M_press * inputs["Propulsion setup"]['gas_const'] * inputs["Propulsion setup"]['storage_temp'] / inputs["Propulsion setup"]['storage_press']
 
     # Check tank capacities
@@ -93,8 +93,8 @@ def calc_prop_mass(dry_mass, inputs):
         return print(total_prop_mass)
     else:
         # Return None if tanks don't fit
-        return print(max_oxidizer_capacity, v_oxidizer_required, max_fuel_capacity, v_fuel_required )
+        return print(max_oxidizer_capacity, v_oxidizer_required, max_fuel_capacity, v_fuel_required, v_press, max_pressurant_capacity)
 
-dry_mass = 650
+dry_mass = 680
 
 print(calc_prop_mass(dry_mass,inputs))

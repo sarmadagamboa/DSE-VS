@@ -63,21 +63,19 @@ class PropulsionProperties:
 
 
               'pressurant_tank_mass': 8,  #kg
-              'prop_tank_mass':10.8, #kg
+              'prop_tank_mass':21, #kg
 
-              #'fuel_tank_volume': 0.138,  # m^3
-              #'oxidiser_tank_volume': 0.138,  # m^3
-              'pressurant_tank_volume': 0.032,  # m^3
-              'tank_volume':0.165, #m^3
+              'pressurant_tank_volume': 0.040,  # m^3
+              'tank_volume':0.198, #m^3
 
               # Quantities
               'n_thrusters': 2,
               'n_prop_fill_drain_valve': 4,
-              'n_press_fill_drain_valve': 11,
+              'n_press_fill_drain_valve': 9,
               'n_parallel_check_valve': 4,
               'n_press_regulator': 4,
-              'n_pyro_valve': 14,
-              'n_iso_valve': 20,
+              'n_pyro_valve': 8,
+              'n_iso_valve': 6,
               'n_filter': 3,
               'n_press_sens': 8
               }
@@ -124,7 +122,7 @@ propulsion_hardware = electric_base_mass + biprop_base_mass
 print(f"Total propulsion hardware: {propulsion_hardware:.1f} kg")
 
 
-m_dry_actual = 630
+m_dry_actual = 677
 
 
 # Calculate station keeping propellant requirements
