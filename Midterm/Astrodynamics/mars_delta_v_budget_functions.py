@@ -415,7 +415,7 @@ def simulate_and_plot2():
 
 
 if __name__ == "__main__":
-    main(use_aerobraking=True, inclination_midcourse= True, leo_alt=200, mars_orbit_alt = 212.48, spacecraft_mass = 654.731, Cd = 2.6, cross_sectional_area = 1.7*1.2, delta_t = 1.88*365*24*3600)
+    main(use_aerobraking=True, inclination_midcourse= True, leo_alt=200, mars_orbit_alt = 120, spacecraft_mass = 654.731, Cd = 2.6, cross_sectional_area = 1.7*1.2, delta_t = 1.88*365*24*3600)
     # main(use_aerobraking=False, inclination_midcourse= False, leo_alt=200, mars_orbit_alt = 212, spacecraft_mass = 700, Cd = 2.6, cross_sectional_area = 2, delta_t = 3.8*365*24*3600)
     # main(use_aerobraking=True, inclination_midcourse= False, leo_alt=200, mars_orbit_alt = 212, spacecraft_mass = 700, Cd = 2.6, cross_sectional_area = 2, delta_t = 3.3*365*24*3600)
     # main(use_aerobraking=False, inclination_midcourse= True, leo_alt=200, mars_orbit_alt = 212, spacecraft_mass = 700, Cd = 2.6, cross_sectional_area = 2, delta_t = 3.8*365*24*3600)
