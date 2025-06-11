@@ -162,6 +162,10 @@ def iteration_loop(inputs, dry_mass_margin=1.1, values_close_percent=0.5):
     
     #inputs["tank_check"]["all_tanks_fit"], inputs["tank_check"]["tank_fits"], inputs["tank_check"]["tank_vols"], inputs["tank_check"]["tank_caps"] = check_tank_capacities(inputs["mass"]["Propellant_mass"], inputs)
 
+    real_wet_mass = dry_mass/1.1 + inputs["mass"]["Propellant_mass"]
+    print(f"Final dry mass: {dry_mass/1.1 - 10} kg")
+    print(f"Final no margin wet mass: {real_wet_mass} kg")
+
     return wet_mass_evolution, prop_mass_evolution, inputs
 
 
@@ -171,20 +175,20 @@ if __name__ == "__main__":
     inputs = {}
 
     inputs["mass"] = {
-        "Payload_mass": 142,  # kg
+        "Payload_mass": 143,  # kg
         "ADCS_mass": 36.7,  # kg
         "TTC_mass": 75,  # kg
         "CDHS_mass": 10,  # kg
         "Thermal_mass": 29.45,  # kg
         "Power_mass": 41.36,  # kg
-        "Propulsion_dry_mass": 145.7,  # kg
+        "Propulsion_dry_mass": 147.7,  # kg
     }
 
     inputs["Propulsion setup"] = {
         "Electric_isp":1500,  # s
         "Electric_prop_margin": 0.20,
         "Electric_propellant_density": 1350,  # kg/m^3 (Xenon)
-        "Electric_tank_volume": 2 * 0.005,
+        "Electric_tank_volume": 2 * 0.006,
 
         "Biprop_isp": 321, # s
         "Biprop_prop_margin": 0.15,
@@ -207,7 +211,7 @@ if __name__ == "__main__":
         'dim_width': 1.7,  # m
         }
 
-    inputs["Propellant_mass_guess"] = 0 # kg
+    inputs["Propellant_mass_guess"] =  # kg
     inputs["Structural_mass_guess"] = 86.48 # kg
     inputs["Insertion_DeltaV"] = 1308.14  # m/s -- total deltaV of the Mars insertion
     inputs["Onorbit_DeltaV"] = 0.125 * 290.1 + 196.21  # m/s -- total deltaV of the spacecraft after insertion
