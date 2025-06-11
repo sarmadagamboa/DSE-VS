@@ -17,7 +17,7 @@ t_capture = 45 # minutes #30 for biprop or monopropellant and 15*24*60 for bipro
 
 #Delta-V requirements
 deltav_station = 0.125*290.1++196.21 #0.105#196.21#0.105*70+196.21 #0.285 #60 * (mission_duration - t_transfer/12) #m/s station keeping (60m/s per year): 2nd iteration: 270
-deltav_capture = 1249  #m/s capture (Assuming aerobreaking assist) --> second iteration: 1000 to 1249
+deltav_capture = 37#1249  #m/s capture (Assuming aerobreaking assist) --> second iteration: 1000 to 1249
 
 class PropulsionProperties:
     #Option 1a - Electric Propulsion

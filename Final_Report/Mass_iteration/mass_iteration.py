@@ -168,7 +168,7 @@ if __name__ == "__main__":
 
     inputs["Propellant_mass_guess"] = 0 # kg
     inputs["Structural_mass_guess"] = 86.48 # kg
-    inputs["Insertion_DeltaV"] = 1249  # m/s -- total deltaV of the Mars insertion
+    inputs["Insertion_DeltaV"] = 1249+45.14  # m/s -- total deltaV of the Mars insertion
     inputs["Onorbit_DeltaV"] = 0.125 * 290.1 + 196.21  # m/s -- total deltaV of the spacecraft after insertion
     inputs["Capture_Time"] = 45 #minutes
     inputs["Stationkeeping_Time"] = 20 * 290.1 + 365 * 24 * 60 / 10 #minutes
