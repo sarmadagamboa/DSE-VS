@@ -66,7 +66,7 @@ def orbital_decay(alt,start_apocenter = 45000, year= 2, spacecraft_mass=595*2, d
     v_pericenter = np.sqrt(mu * (2 / r - 1 / a_current))
     drag_force = 0.5 * rho * v_pericenter**2 * drag_coefficient * cross_sectional_area
     print(drag_force)
-    L_effect = np.sqrt(2*np.pi*r*H)
+
     s = np.pi * r  # Circumference of the orbit
     delta_E = -drag_force * s 
     E = -spacecraft_mass * mu / (2*a_current)  # Initial orbital energy
