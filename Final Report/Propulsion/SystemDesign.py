@@ -8,7 +8,7 @@ m_dry_with_initial_prop = 639.3 #kg
 # Mission parameters
 mission_duration = 4.5  # years
 t_transfer = 8  # months
-t_station = 3.3*365*24*60  #3.3 years
+t_station = 45  #3.3 years
 t_capture = 45 # minutes #30 for biprop
 
 #Delta-V requirements

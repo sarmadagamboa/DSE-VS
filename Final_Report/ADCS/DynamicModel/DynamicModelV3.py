@@ -13,13 +13,13 @@ I = np.array([[Ixx, -Ixy, -Ixz],
 inv_I = np.linalg.inv(I)
 
 def disturbance(t):
-    Solar_pressure_torque = maximum_torque(q, A_s, c_ps, c_g_s)
+    Solar_pressure_torque = maximum_torque(q, A_s, c_ps, c_g)
     Gravity_gradient_torque = gravity_torque(r=r, theta=theta, I_y=Iyy, I_z=Izz)
-    Aerodynamic_torque = aerodynamic_torque(C_d=C_d, rho=rho, A=A_aero, r=r, c_g=c_g_a, c_pa=c_pa)
+    Aerodynamic_torque = aerodynamic_torque(C_d=C_d, rho=rho, A=A_aero, r=r, c_g=c_g, c_pa=c_pa)
     if t < 1000:
         Internal_disturbance_torque = np.array([0, 0, 0])
-    elif t >= 1000 and t < 4600:
-        Internal_disturbance_torque = np.array([2*1.083e-5, 0, 0]) # moving the antenna
+    # elif t >= 1000 and t < 2200:
+    #     Internal_disturbance_torque = np.array([-1.8e-3, 0, 0]) # moving the antenna
     else:
         Internal_disturbance_torque = np.array([0, 0, 0])
     # if t < 3600:
@@ -34,8 +34,8 @@ def disturbance(t):
     return total_torque
 
 def controller(omega, attitude_error, omega_desired=np.array([om_x, om_y, om_z])):
-    Kp = np.array([1, 1, 1])   # Proportional gains for long term stability: [1, 1, 1]
-    Kd = np.array([50, 50, 50])      # Derivative gains for long term stability: [10, 15, 10]
+    Kp = np.array([1.5, 0.5, 1.5])   # Proportional gains during thruster operation: [9.5, 2, 5.5] # no disturbance: [9.5, 0.5, 5.5]
+    Kd = np.array([34.5, 26.5, 34.5])      # Derivative gains during thruster operation: [49, 37, 34] # no disturbance: [49, 45, 34]
     tau = np.zeros(3)  # Initialize torque vector
     tau[0] = -Kp[0] * attitude_error[0] - Kd[0] * (omega[0] - omega_desired[0])
     tau[1] = -Kp[1] * attitude_error[1] - Kd[1] * (omega[1] - omega_desired[1])
@@ -74,9 +74,10 @@ def plot(omega_x, omega_y, omega_z, roll, pitch, yaw, time, sol):
 
     Settling_time = int(len(time) / 10)  # Assuming the first 10% of the time is settling time
     # Max deviations
-    print(f'Maximum deviation from desired roll: {np.max(np.abs(roll[Settling_time:] - desired_r[Settling_time:]))*1000} mrad')
-    print(f'Maximum deviation from desired pitch: {np.max(np.abs(pitch[Settling_time:] - desired_p[Settling_time:]))*1000} mrad')
-    print(f'Maximum deviation from desired yaw: {np.max(np.abs(yaw[Settling_time:] - desired_y[Settling_time:]))*1000} mrad')
+    print("Attitude Deviation from Desired Orientation:")
+    print(f"  Roll : {np.max(np.abs(roll[Settling_time:] - desired_r[Settling_time:]))*1000:.3f} mrad")
+    print(f"  Pitch: {np.max(np.abs(pitch[Settling_time:] - desired_p[Settling_time:]))*1000:.3f} mrad")
+    print(f"  Yaw  : {np.max(np.abs(yaw[Settling_time:] - desired_y[Settling_time:]))*1000:.3f} mrad\n")
 
     # Torque logs
     torque_log = []
@@ -91,9 +92,19 @@ def plot(omega_x, omega_y, omega_z, roll, pitch, yaw, time, sol):
     torque_log = np.array(torque_log)
 
     dt = sol.t[1] - sol.t[0]
-    print(f"total torque supplied over one orbit: {np.sum(np.abs(torque_log), axis=0) * dt} Nm-s")
-    print(f"saturation of moment wheels: {np.sum(torque_log, axis=0)*dt} Nm-s")
-    print(f"total disturbance torque over one orbit: {np.sum(np.abs([disturbance(t) for t in sol.t]), axis=0) * dt} Nm-s")
+    print("Torque Summary Over One Orbit:")
+    print(f"{'Type':<28} {'X':>10} {'Y':>10} {'Z':>10}   [Nm-s]")
+    print("-" * 65)
+
+    def print_torque_row(label, vec):
+        print(f"{label:<28} {vec[0]:10.4f} {vec[1]:10.4f} {vec[2]:10.4f}   Nm-s")
+
+    # Rows
+    print_torque_row("Total Control Torque", np.sum(np.abs(torque_log), axis=0) * dt)
+    print_torque_row("Disturbance Torque", np.sum(np.abs([disturbance(t) for t in sol.t]), axis=0) * dt)
+
+
+
     fig, axs = plt.subplots(4, 1, figsize=(12, 16), sharex=True)
 
     # --- 1. Angular Velocity ---
@@ -154,7 +165,7 @@ def desired_attitude(t):
 if __name__ == "__main__":
     # Initial state:
     omega0 = np.array([om_x, om_y, om_z])
-    attitude0 = np.array([0, 0, 0])
+    attitude0 = np.array([0, 0, np.pi/2])
     state0 = np.concatenate([omega0, attitude0])
 
     # Desired angular velocity
@@ -162,7 +173,7 @@ if __name__ == "__main__":
 
     # Time span and evaluation points
     t_span = (0, 110 * 60) # if orbit length is changed here, it also needs to be changed in desired_attitude and plot
-    num_points = 100000  # Number of points for evaluation
+    num_points = 5000  # Number of points for evaluation
 
     # Solve the ODE
     omega_x, omega_y, omega_z, roll, pitch, yaw, time, sol = solve(t_span, state0, num_points)

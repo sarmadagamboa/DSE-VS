@@ -7,26 +7,26 @@ G = 9.80665 #m/s^2
 # Mission parameters
 mission_duration = 4.5  # years
 t_transfer = 8  # months
-t_station = 3.3*365*24*60  #3.3 years
+t_station = 20*290.1 + 365*24*60/10  #3.3 years
 t_capture = 45 # minutes #30 for biprop
 
 #Delta-V requirements
-deltav_station = 121.3 + 60 #orbit maintainance/drag and EOL maneuver
-deltav_capture = 1249  #m/s capture (Assuming aerobreaking assist)
+deltav_station = 0.125*290.1+196.21   #0.105*70+196.21 #orbit maintainance/drag and EOL maneuver
+deltav_capture = 1308.14  #m/s capture (Assuming aerobreaking assist)
 
 class PropulsionProperties:
     #Electric Propulsion - Stationkeeping
     ELECTRIC_SK = {'name': 'Solar Electric Propulsion',
-        'isp': 1242.9,  # specific impulse (s) at 188km: 1242.9  at 177km:1409.6
-        'power': 73.4, #system power (W) at 188km:73.4 at 177km: 113.9
+        'isp': 1500,  # specific impulse (s) at 188km: 1242.9  at 177km:1409.6
+        'power': 1200, #system power (W) at 188km:73.4 at 177km: 113.9
         'thrust': 1.3, #mN #1-20mN
-        'propellant_density': 1830, # kg/m^3 (Xenon at room temp, high pressure) https://electricrocket.org/IEPC/IEPC1991-107.pdf
+        'propellant_density': 1350, # kg/m^3 (Xenon at room temp, high pressure) https://electricrocket.org/IEPC/IEPC1991-107.pdf
         'prop_margin':0.20,#%
 
         # Component masses (kg)
-        'PXFA_mass' : 4, #2-5kg,
-        'PPU_mass':17.5, #kg
-        'thruster_mass': 2.3,  # kg ITA
+        'PXFA_mass' : 1.1, #2-5kg,
+        'PPU_mass':20.5, #kg
+        'thruster_mass': 3,  # kg ITA
         'tank_mass': 2.5, #kg
         'tank_volume': 0.005 #m^3 (5L)
         }
@@ -65,19 +65,17 @@ class PropulsionProperties:
               'pressurant_tank_mass': 8,  #kg
               'prop_tank_mass':21, #kg
 
-              #'fuel_tank_volume': 0.138,  # m^3
-              #'oxidiser_tank_volume': 0.138,  # m^3
-              'pressurant_tank_volume': 0.035,  # m^3
-              'tank_volume':0.180, #m^3
+              'pressurant_tank_volume': 0.040,  # m^3
+              'tank_volume':0.198, #m^3
 
               # Quantities
               'n_thrusters': 2,
               'n_prop_fill_drain_valve': 4,
-              'n_press_fill_drain_valve': 11,
+              'n_press_fill_drain_valve': 9,
               'n_parallel_check_valve': 4,
               'n_press_regulator': 4,
-              'n_pyro_valve': 14,
-              'n_iso_valve': 20,
+              'n_pyro_valve': 8,
+              'n_iso_valve': 6,
               'n_filter': 3,
               'n_press_sens': 8
               }
@@ -124,27 +122,18 @@ propulsion_hardware = electric_base_mass + biprop_base_mass
 print(f"Total propulsion hardware: {propulsion_hardware:.1f} kg")
 
 
-m_dry_actual = 595.21
-print(f"Total dry mass: {m_dry_actual:.1f} kg")
+m_dry_actual = 677
+
 
 # Calculate station keeping propellant requirements
-m_before_stkeeping, m_prop_stkeeping_electric_nomargin = compute_mass_after_deltav(
-    m_dry_actual, deltav_station, electric['isp']
-)
+
+m_before_stkeeping, m_prop_stkeeping_electric_nomargin = compute_mass_after_deltav(m_dry_actual, deltav_station, electric['isp'])
+
 m_prop_stkeeping_electric = m_prop_stkeeping_electric_nomargin * (1 + electric['prop_margin'])
 
 print(f"\nStation keeping calculation:")
 print(f"Electric propellant needed (no margin): {m_prop_stkeeping_electric_nomargin:.1f} kg")
 print(f"Electric propellant needed (with margin): {m_prop_stkeeping_electric:.1f} kg")
-
-
-# Check if electric propellant fits in available tank volume
-max_electric_prop = 2 * electric['tank_volume'] * electric['propellant_density']
-print(f"Maximum electric propellant capacity: {max_electric_prop:.1f} kg")
-if m_prop_stkeeping_electric > max_electric_prop:
-    print(f"WARNING: Required electric propellant ({m_prop_stkeeping_electric:.1f} kg) exceeds tank capacity!")
-else:
-    print(f"Electric propellant fits in tanks with {max_electric_prop - m_prop_stkeeping_electric:.1f} kg margin")
 
 # Calculate capture maneuver requirements
 m_initial_mission, m_prop_capture_nomargin = compute_mass_after_deltav(
@@ -182,7 +171,16 @@ print(f"Pressurant mass: {press_mass:.1f} kg")
 print(f"Pressurant volume required: {v_pressurant*1000:.1f} L")
 
 # Tank capacity checks for all three biprop tanks
-print(f"\n=== TANK CAPACITY CHECKS ===")
+print(f"\n TANK CAPACITY CHECKS")
+
+# Check if electric propellant fits in available tank volume
+max_electric_prop = 2 * electric['tank_volume'] * electric['propellant_density']
+print(f"Maximum electric propellant capacity: {max_electric_prop:.1f} kg")
+if m_prop_stkeeping_electric > max_electric_prop:
+    print(f"WARNING: Required electric propellant ({m_prop_stkeeping_electric:.1f} kg) exceeds tank capacity!")
+else:
+    print(f"Electric propellant fits in tanks with {max_electric_prop - m_prop_stkeeping_electric:.1f} kg margin")
+
 
 # 1. Fuel tank
 max_fuel_capacity = biprop['tank_volume']  # Single tank design
@@ -224,5 +222,5 @@ print(f"Total propellant mass: {total_propellant:.1f} kg")
 
 # Final verification
 
-calculated_total_final = m_dry_actual + propellants_only
+calculated_total_final = m_dry_actual + total_propulsion_mass
 

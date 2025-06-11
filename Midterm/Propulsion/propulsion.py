@@ -3,12 +3,12 @@ import math
 
 #constants
 G = 9.80665 #m/s^2
-m_dry = 700 #kg
+m_dry = 580 #kg
 
 # Mission parameters
 mission_duration = 4.5  # years
 t_transfer = 8  # months
-t_station = 60 #60  # minutes #3.3 years
+t_station = 20*290.1 + 365*24*60/10#365*24*60/10#45  # minutes #3.3 years
 t_capture = 45 # minutes #30 for biprop or monopropellant and 15*24*60 for biprop/electric
 
 #SST LRI-ACC--> biprop
@@ -16,22 +16,22 @@ t_capture = 45 # minutes #30 for biprop or monopropellant and 15*24*60 for bipro
 #DT --> monopropellant
 
 #Delta-V requirements
-deltav_station = 212#60 * (mission_duration - t_transfer/12) #m/s station keeping (60m/s per year): 2nd iteration: 270
-deltav_capture = 1249  #m/s capture (Assuming aerobreaking assist) --> second iteration: 1000 to 1249
+deltav_station = 0.125*290.1++196.21 #0.105#196.21#0.105*70+196.21 #0.285 #60 * (mission_duration - t_transfer/12) #m/s station keeping (60m/s per year): 2nd iteration: 270
+deltav_capture = 37#1249  #m/s capture (Assuming aerobreaking assist) --> second iteration: 1000 to 1249
 
 class PropulsionProperties:
     #Option 1a - Electric Propulsion
     ELECTRIC_MAIN = {'name': 'Solar Electric Propulsion',
-        'isp': 2000,  # specific impulse (s)
-        'eta': 0.7,  # efficiency
+        'isp': 1700,  # specific impulse (s)
+        'eta': 0.5,  # efficiency
         'thruster_mass': 12.5,  # kg (BHT-6000 HIM of 300mN)
         'propellant_density': 1350,  # kg/m^3 (Xenon at room temp, high pressure)
         'feed_system_factor': 0.95,  # 5% mass for feed system
     }
     # Option 1b - Electric Propulsion
     ELECTRIC_SK = {'name': 'Solar Electric Propulsion',
-        'isp': 1600,  # specific impulse (s)
-        'eta': 0.7,  # efficiency
+        'isp': 1700,  # specific impulse (s)
+        'eta': 0.5,  # efficiency
         'thruster_mass': 2,  # kg (BHT-6000 HIM of 300mN)
         'propellant_density': 1350,  # kg/m^3 (Xenon at room temp, high pressure)
         'feed_system_factor': 0.95,  # 5% mass for feed system
@@ -47,9 +47,11 @@ class PropulsionProperties:
         'press_to_prop': 7/925,
         'feed_system_factor': 0.80,  # 20% mass for feed system
     }
+
+    BIPROP_SK = {'name': 'Bipropellant Propulsion'}
     #Option 3 - Hybrid Propulsion
     COLDGAS = {
-        'name': 'Cold Gas',
+        'name': 'Biprop_SK',
         'isp': 300,  # specific impulse for cold gas (s)
         'thruster_mass': 0.1,  # kg
         'propellant_density': 1200,  # kg/m^3 (N2)
@@ -206,10 +208,10 @@ def analyse_biprop_option():
 
 def analyse_hybrid_option_biprop_coldgas():
     biprop = PropulsionProperties.BIPROP
-    coldgas = PropulsionProperties.COLDGAS
+    coldgas = PropulsionProperties.BIPROP_SK
 
     # Calculate masses for station keeping using cold gas
-    m_before_stkeeping, m_prop_stkeeping_coldgas = compute_mass_after_deltav(m_dry, deltav_station, coldgas['isp'])
+    m_before_stkeeping, m_prop_stkeeping_coldgas = compute_mass_after_deltav(m_dry, deltav_station, biprop['isp'])
 
     # Calculate masses for capture using biprop
     m_before_capture, m_prop_capture = compute_mass_after_deltav(m_before_stkeeping, deltav_capture, biprop['isp'])
@@ -389,4 +391,5 @@ def analyse_monoprop_option():
     }
 
 if __name__ == "__main__":
-    print(analyse_hybrid_option_biprop_coldgas())
+    print(analyse_hybrid_option_biprop_electric())
+
