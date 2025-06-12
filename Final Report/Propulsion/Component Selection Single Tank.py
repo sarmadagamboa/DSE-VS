@@ -122,7 +122,7 @@ propulsion_hardware = electric_base_mass + biprop_base_mass
 print(f"Total propulsion hardware: {propulsion_hardware:.1f} kg")
 
 
-m_dry_actual = 677
+m_dry_actual = 691.8
 
 
 # Calculate station keeping propellant requirements
