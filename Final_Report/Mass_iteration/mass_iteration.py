@@ -163,8 +163,10 @@ def iteration_loop(inputs, dry_mass_margin=1.1, values_close_percent=0.5):
     #inputs["tank_check"]["all_tanks_fit"], inputs["tank_check"]["tank_fits"], inputs["tank_check"]["tank_vols"], inputs["tank_check"]["tank_caps"] = check_tank_capacities(inputs["mass"]["Propellant_mass"], inputs)
 
     real_wet_mass = dry_mass/1.1 + inputs["mass"]["Propellant_mass"]
-    print(f"Final dry mass: {dry_mass/1.1 - 10} kg")
-    print(f"Final no margin wet mass: {real_wet_mass} kg")
+    print(f"Final dry mass no margin: {dry_mass/1.1 - 10} kg")
+    print(f"Final wet mass no margin: {real_wet_mass} kg")
+    print(f"Final dry mass with margin: {dry_mass} kg")
+    
 
     return wet_mass_evolution, prop_mass_evolution, inputs
 
@@ -177,10 +179,10 @@ if __name__ == "__main__":
     inputs["mass"] = {
         "Payload_mass": 143,  # kg
         "ADCS_mass": 36.7,  # kg
-        "TTC_mass": 75,  # kg
+        "TTC_mass": 81,  # kg
         "CDHS_mass": 10,  # kg
-        "Thermal_mass": 29.45,  # kg
-        "Power_mass": 41.36,  # kg
+        "Thermal_mass": 21.16,  # kg
+        "Power_mass": 49.35,  # kg
         "Propulsion_dry_mass": 147.7,  # kg
     }
 
@@ -227,7 +229,7 @@ if __name__ == "__main__":
     final_prop_mass = prop_mass_evolution[-1]
     final_struct_mass = outputs["mass"]["Structural_mass"]
  
-    print(f"Final wet mass: {final_wet_mass} kg")
+    print(f"Final wet mass with margin: {final_wet_mass} kg")
     print(f"Final propellant mass: {final_prop_mass} kg")
     print(f"Final structural mass: {final_struct_mass} kg")
 
