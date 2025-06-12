@@ -7,7 +7,7 @@ G = 9.80665 #m/s^2
 # Mission parameters
 mission_duration = 4.5  # years
 t_transfer = 8  # months
-t_station = 20*290.1 + 365*24*60/10  #3.3 years
+t_station = 20 * 427 + 365 * 24 * 60 / 10 #3.3 years
 t_capture = 45 # minutes #30 for biprop
 
 #Delta-V requirements
