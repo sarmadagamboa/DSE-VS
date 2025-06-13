@@ -164,15 +164,15 @@ def desired_attitude(t):
 
 if __name__ == "__main__":
     # Initial state:
-    omega0 = np.array([om_x, om_y, om_z])
-    attitude0 = np.array([0, 0, np.pi/2])
+    omega0 = np.array([om_x, om_y, 5/180*np.pi])
+    attitude0 = np.array([0, 0, 0])
     state0 = np.concatenate([omega0, attitude0])
 
     # Desired angular velocity
     omega_desired = np.array([om_x, om_y, om_z])
 
     # Time span and evaluation points
-    t_span = (0, 110 * 60) # if orbit length is changed here, it also needs to be changed in desired_attitude and plot
+    t_span = (0, 110 * 60*10) # if orbit length is changed here, it also needs to be changed in desired_attitude and plot
     num_points = 5000  # Number of points for evaluation
 
     # Solve the ODE
