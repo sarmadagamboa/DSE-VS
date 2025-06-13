@@ -65,7 +65,7 @@ plt.xticks(Years)  # Use only the exact year values
 plt.ylabel('Annual Cost (Millions EUR)')
 plt.grid(True)
 plt.tight_layout()
-plt.savefig('Final_Report\Budgets\MarsExplore_annual_cost.png')
+plt.savefig('Final_Report\Budgets\Figures\MarsExplore_annual_cost.png')
 plt.show()
 
 # === Plot 2: Cumulative Cost Over Time ===
@@ -78,5 +78,5 @@ plt.xticks(Years)  # Use only the exact year values
 plt.ylabel('Cumulative Cost (Millions EUR)')
 plt.grid(True)
 plt.tight_layout()
-plt.savefig('Final_Report\Budgets\MarsExplore_cumulative_cost.png')
+plt.savefig('Final_Report\Budgets\Figures\MarsExplore_cumulative_cost.png')
 plt.show()

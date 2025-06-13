@@ -12,7 +12,7 @@ plt.ylabel('Dry Mass (kg)')
 plt.title('Dry Mass Evolution')
 plt.grid(True)
 plt.tight_layout()
-plt.savefig('Final_Report\Budgets\MarsExplore_dry_mass_evolution.png')
+plt.savefig('Final_Report\Budgets\Figures\MarsExplore_dry_mass_evolution.png')
 plt.show()
 
 
@@ -27,7 +27,7 @@ plt.ylabel('Power (W)')
 plt.title('Power Evolution')
 plt.grid(True)
 plt.tight_layout()
-plt.savefig('Final_Report\Budgets\MarsExplore_power_evolution.png')
+plt.savefig('Final_Report\Budgets\Figures\MarsExplore_power_evolution.png')
 plt.show()
 
 
@@ -42,7 +42,7 @@ plt.ylabel('Cost (Million EUR)')
 plt.title('Cost Evolution')
 plt.grid(True)
 plt.tight_layout()
-plt.savefig('Final_Report\Budgets\MarsExplore_cost_evolution.png')
+plt.savefig('Final_Report\Budgets\Figures\MarsExplore_cost_evolution.png')
 plt.show()
 
 
@@ -91,6 +91,6 @@ ax.legend(
 ax.set_title('MarsExplore Cost Breakdown', fontsize=16, fontweight='bold')
 ax.axis('equal')  # Equal aspect ratio ensures the pie is circular
 plt.tight_layout()
-plt.savefig('Final_Report/Budgets/MarsExplore_cost_breakdown.png')
+plt.savefig('Final_Report\Budgets\Figures\MarsExplore_cost_breakdown.png')
 plt.show()
 
