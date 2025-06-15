@@ -109,7 +109,7 @@ def run_cost_budget_analysis():
     print(f"{'Second Unit Cost (w/ learning curve):':<{label_width}} {second_unit_cost:>{value_width}.2f} M€")
     print(f"{'Launch Cost:':<{label_width}} {107.20:>{value_width}.2f} M€")
     print(f"{'Operational Cost:':<{label_width}} {88.5:>{value_width}.2f} M€")
-    print(f"{'System Margin Multiplier:':<{label_width}} {system_margin:>{value_width}.2f}x")
+    print(f"{'System Margin Multiplier:':<{label_width}} {system_margin:>{value_width}.3f}x")
     print(f"{'Total Cost (with margin):':<{label_width}} {(total_cost * system_margin):>{value_width}.2f} M€")
     print(f"{'Effective margin:':<{label_width}} {((total_cost/total_cost2 * 100*system_margin)-100):>{value_width}.2f} %")
 
