@@ -34,6 +34,7 @@ Solar_array_area = 7.2
 Solar_length = Solar_array_area/2/SC_length
 worst_case_solar_incidence = 27/180*np.pi  # Worst case solar incidence angle in radians, assuming the solar panels are perpendicular to the sun
 boom_length = np.tan(worst_case_solar_incidence)*SC_width
+mounting_location = 1.2
 q = 0.6 # preliminary reflectance factor, a more comprehensive analysis is needed as it will vary across the spacecraft
 A_sp = Solar_array_area/2 # per solar array
 A_side = SC_length*SC_height # Area of the side of the spacecraft
@@ -49,12 +50,12 @@ rho = 1.4e-11  # Density of the Martian atmosphere in kg/m^3
 r = 212.48e3  # Distance from the center of Mars to the spacecraft in meters
 Solar_thickness = 10/1000
 Sidepiece_height = 0.5
-Sidepiece_width = 0.355
+Sidepiece_width = 0.4
 c_g_a = SC_width/2 # measured from the location where the arrays are mounted
 A_aero = SC_height*SC_width + Antenna_depth*Antenna_diameter/2 + 2*Solar_length*Solar_thickness + Sidepiece_width*Sidepiece_height
-c_pa = (SC_height*SC_width*SC_width/2 + Antenna_diameter*Antenna_depth/2*SC_width + Sidepiece_height*Sidepiece_width*(-Sidepiece_width/2))/(A_aero)
+c_pa = (SC_height*SC_width*SC_width/2 + Antenna_diameter*Antenna_depth/2*SC_width + Sidepiece_height*Sidepiece_width*(-Sidepiece_width/2)+2*Solar_length*Solar_thickness)/(A_aero)
 c_pa = np.array([0, c_pa-c_g_a, 0.003])
 
-# print(f"C_pa = {c_pa} m and c_g_a = {c_g_a} m, measured from the bottom of the spacecraft")
+print(f"C_pa = {c_pa} m and c_g_a = {c_g_a} m, measured from the bottom of the spacecraft")
 # gravity gradient torque parameters
 theta = 0 # Maximum torque occurs at pi/4, but this will never occur for the spacecraft
