@@ -33,7 +33,7 @@ def calc_prop_mass(dry_mass, inputs):
     v_oxidizer_required = oxidiser_mass /inputs["Propulsion setup"]["Oxidizer_density"]
     v_prop_biprop = v_fuel_required + v_oxidizer_required
 
-    M_press = inputs["Propulsion setup"]["final_press"] * v_prop_biprop / (inputs["Propulsion setup"]['gas_const']* inputs["Propulsion setup"]['storage_press'])
+    M_press = inputs["Propulsion setup"]["final_press"] * v_prop_biprop / (inputs["Propulsion setup"]['gas_const']* inputs["Propulsion setup"]['storage_temp'])
     v_press = M_press * inputs["Propulsion setup"]['gas_const'] * inputs["Propulsion setup"]['storage_temp'] / inputs["Propulsion setup"]['storage_press']
 
     # Check tank capacities
@@ -52,7 +52,7 @@ def calc_prop_mass(dry_mass, inputs):
     # Pressurant tank check
     max_pressurant_capacity = inputs["Propulsion setup"]["Pressurant_tank_volume"]
     pressurant_fits = (v_press <= max_pressurant_capacity)
-
+    print(fuel_mass,oxidiser_mass,M_press,m_prop_stkeeping_electric )
     all_tanks_fit = electric_fits and fuel_fits and oxidizer_fits and pressurant_fits
 
     if all_tanks_fit:
@@ -64,7 +64,7 @@ def calc_prop_mass(dry_mass, inputs):
         return print(max_oxidizer_capacity, v_oxidizer_required, max_fuel_capacity, v_fuel_required, v_press,
                      max_pressurant_capacity)
 
-
+'''
 def check_tank_capacities(dry_mass, inputs):
     """Check if the tanks have enough capacity for the propellant mass.
     """
@@ -102,10 +102,11 @@ def check_tank_capacities(dry_mass, inputs):
     # Pressurant tank check
     max_pressurant_capacity = inputs["Propulsion setup"]["Pressurant_tank_volume"]
     pressurant_fits = (v_press <= max_pressurant_capacity)
-
+'''
+    
 
 def calculate_wet_mass(inputs, dry_mass_margin=1.1):
-    print(inputs["mass"]["Propellant_mass"])
+    #print(inputs["mass"]["Propellant_mass"])
     return sum(value for key, value in inputs["mass"].items() if key != "Propellant_mass") * dry_mass_margin + inputs["mass"]["Propellant_mass"]
 
 
@@ -162,6 +163,12 @@ def iteration_loop(inputs, dry_mass_margin=1.1, values_close_percent=0.5):
     
     #inputs["tank_check"]["all_tanks_fit"], inputs["tank_check"]["tank_fits"], inputs["tank_check"]["tank_vols"], inputs["tank_check"]["tank_caps"] = check_tank_capacities(inputs["mass"]["Propellant_mass"], inputs)
 
+    real_wet_mass = dry_mass/1.1 + inputs["mass"]["Propellant_mass"]
+    print(f"Final dry mass no margin: {dry_mass/1.1 - 10} kg")
+    print(f"Final wet mass no margin: {real_wet_mass} kg")
+    print(f"Final dry mass with margin: {dry_mass} kg")
+    
+
     return wet_mass_evolution, prop_mass_evolution, inputs
 
 
@@ -171,20 +178,20 @@ if __name__ == "__main__":
     inputs = {}
 
     inputs["mass"] = {
-        "Payload_mass": 142,  # kg
+        "Payload_mass": 143,  # kg
         "ADCS_mass": 36.7,  # kg
-        "TTC_mass": 75,  # kg
+        "TTC_mass": 81,  # kg
         "CDHS_mass": 10,  # kg
-        "Thermal_mass": 29.45,  # kg
-        "Power_mass": 41.36,  # kg
-        "Propulsion_dry_mass": 145.7,  # kg
+        "Thermal_mass": 21.16,  # kg
+        "Power_mass": 49.35,  # kg
+        "Propulsion_dry_mass": 147.7,  # kg
     }
 
     inputs["Propulsion setup"] = {
         "Electric_isp":1500,  # s
         "Electric_prop_margin": 0.20,
         "Electric_propellant_density": 1350,  # kg/m^3 (Xenon)
-        "Electric_tank_volume": 2 * 0.005,
+        "Electric_tank_volume": 2 * 0.006,
 
         "Biprop_isp": 321, # s
         "Biprop_prop_margin": 0.15,
@@ -193,7 +200,7 @@ if __name__ == "__main__":
         "Ox_fuel_ratio" :1.65,
         "Fuel_tank_volume" :0.198,  # m^3
         "Oxidizer_tank_volume" : 0.198,  # m^
-        'Pressurant_tank_volume': 0.032,  # m^3
+        'Pressurant_tank_volume': 0.040,  # m^3
 
         'final_press': 2000000,  # Pa
         'storage_temp': 300,  # K
@@ -207,12 +214,12 @@ if __name__ == "__main__":
         'dim_width': 1.7,  # m
         }
 
-    inputs["Propellant_mass_guess"] = 0 # kg
+    inputs["Propellant_mass_guess"] = 300 # kg
     inputs["Structural_mass_guess"] = 86.48 # kg
     inputs["Insertion_DeltaV"] = 1308.14  # m/s -- total deltaV of the Mars insertion
-    inputs["Onorbit_DeltaV"] = 0.125 * 290.1 + 196.21  # m/s -- total deltaV of the spacecraft after insertion
+    inputs["Onorbit_DeltaV"] = 56+196.21  # m/s -- total deltaV of the spacecraft after insertion
     inputs["Capture_Time"] = 45 #minutes
-    inputs["Stationkeeping_Time"] = 20 * 290.1 + 365 * 24 * 60 / 10 #minutes
+    inputs["Stationkeeping_Time"] = 20 * 427 + 365 * 24 * 60 / 10 #minutes
 
 #add valuesclose_percent to inputs
 #add dry_mass_margin to inputs
@@ -223,7 +230,7 @@ if __name__ == "__main__":
     final_prop_mass = prop_mass_evolution[-1]
     final_struct_mass = outputs["mass"]["Structural_mass"]
  
-    print(f"Final wet mass: {final_wet_mass} kg")
+    print(f"Final wet mass with margin: {final_wet_mass} kg")
     print(f"Final propellant mass: {final_prop_mass} kg")
     print(f"Final structural mass: {final_struct_mass} kg")
 

@@ -7,11 +7,11 @@ G = 9.80665 #m/s^2
 # Mission parameters
 mission_duration = 4.5  # years
 t_transfer = 8  # months
-t_station = 20*290.1 + 365*24*60/10  #3.3 years
+t_station = 20 * 427 + 365 * 24 * 60 / 10 #3.3 years
 t_capture = 45 # minutes #30 for biprop
 
 #Delta-V requirements
-deltav_station = 0.125*290.1+196.21   #0.105*70+196.21 #orbit maintainance/drag and EOL maneuver
+deltav_station = 56+196.21  #0.105*70+196.21 #orbit maintainance/drag and EOL maneuver
 deltav_capture = 1308.14  #m/s capture (Assuming aerobreaking assist)
 
 class PropulsionProperties:
@@ -27,8 +27,8 @@ class PropulsionProperties:
         'PXFA_mass' : 1.1, #2-5kg,
         'PPU_mass':20.5, #kg
         'thruster_mass': 3,  # kg ITA
-        'tank_mass': 2.5, #kg
-        'tank_volume': 0.005 #m^3 (5L)
+        'tank_mass': 3.5, #kg
+        'tank_volume': 0.006 #m^3 (5L)
         }
 
     #Bipropellant Propulsion - Capture
@@ -122,7 +122,7 @@ propulsion_hardware = electric_base_mass + biprop_base_mass
 print(f"Total propulsion hardware: {propulsion_hardware:.1f} kg")
 
 
-m_dry_actual = 677
+m_dry_actual = 691.8
 
 
 # Calculate station keeping propellant requirements
