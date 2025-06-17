@@ -67,8 +67,8 @@ def delta_v_alt(initial_altitude_m, final_altitude_m):
 # print(f"Final Circular Orbit Altitude: {result['final_circular_orbit_altitude_m']/1000:.2f} km")
 
 
-altitude1 = 120e3
-altitude2 = 212.5e3
+altitude1 = 212.48e3
+altitude2 = 660e3
 result = delta_v_alt(altitude1, altitude2)
 print(f"Δv1 (Transfer Burn): {result['delta_v1_mps']:.2f} m/s")
 print(f"Δv2 (Circularization): {result['delta_v2_mps']:.2f} m/s")
