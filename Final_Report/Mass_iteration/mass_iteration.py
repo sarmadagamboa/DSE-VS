@@ -64,7 +64,7 @@ def calc_prop_mass(dry_mass, inputs):
         return print(max_oxidizer_capacity, v_oxidizer_required, max_fuel_capacity, v_fuel_required, v_press,
                      max_pressurant_capacity)
 
-
+'''
 def check_tank_capacities(dry_mass, inputs):
     """Check if the tanks have enough capacity for the propellant mass.
     """
@@ -102,10 +102,11 @@ def check_tank_capacities(dry_mass, inputs):
     # Pressurant tank check
     max_pressurant_capacity = inputs["Propulsion setup"]["Pressurant_tank_volume"]
     pressurant_fits = (v_press <= max_pressurant_capacity)
-
+'''
+    
 
 def calculate_wet_mass(inputs, dry_mass_margin=1.1):
-    print(inputs["mass"]["Propellant_mass"])
+    #print(inputs["mass"]["Propellant_mass"])
     return sum(value for key, value in inputs["mass"].items() if key != "Propellant_mass") * dry_mass_margin + inputs["mass"]["Propellant_mass"]
 
 
