@@ -10,7 +10,7 @@ def calc_drag_strategy(start_h, margin, mission_lifetime_years=1.9):
     h_max = start_h + margin
     h_min = start_h - margin
 
-    delta_h_per_orbit = 8.37 / 1000  # km
+    delta_h_per_orbit = 12.3 / 1000  # km
 
     a_max = R_M + h_max
     a_min = R_M + h_min
